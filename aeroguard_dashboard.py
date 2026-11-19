@@ -109,6 +109,7 @@ AIRPORTS = {
             "HYD": DESTINATION_AIRPORTS["HYD"],
         },
         "sample_flights": [
+            {"callsign": "IGO403", "icao24": "8008a1", "airline": "IndiGo Airlines", "dest_iata": "BOM", "lat_offset": 0.14, "lon_offset": -0.16, "alt": 9753.0, "vel": 226.0, "vr": 0.0, "squawk": "3321"},
             {"callsign": "IGO436", "icao24": "8008a1", "airline": "IndiGo Airlines", "dest_iata": "BOM", "lat_offset": 0.14, "lon_offset": -0.16, "alt": 9753.0, "vel": 226.0, "vr": 0.0, "squawk": "3321"},
             {"callsign": "AIC469", "icao24": "8005b8", "airline": "Air India", "dest_iata": "DEL", "lat_offset": 0.22, "lon_offset": 0.12, "alt": 10668.0, "vel": 238.0, "vr": -0.5, "squawk": "4210"},
             {"callsign": "IGO6614", "icao24": "8009c4", "airline": "IndiGo Airlines", "dest_iata": "BLR", "lat_offset": -0.18, "lon_offset": 0.15, "alt": 10058.0, "vel": 230.0, "vr": 0.0, "squawk": "5144"},
@@ -626,16 +627,78 @@ def discover_flights(api, lat: float, lon: float, radius_km: float, hub_name: Op
 # COMPREHENSIVE FLIGHT ROUTE LOOKUP
 # ============================================================
 
-@st.cache_data(ttl=600, show_spinner=False)
-def lookup_route(callsign: str, current_lat: Optional[float] = None, current_lon: Optional[float] = None) -> Optional[Dict[str, Any]]:
+@st.cache_data(ttl=120, show_spinner=False)
+def lookup_route(callsign: str, current_lat: Optional[float] = None, current_lon: Optional[float] = None, hub_name: Optional[str] = None) -> Optional[Dict[str, Any]]:
     clean = (callsign or "").strip().replace(" ", "").upper()
     if not clean or clean == "UNKNOWN":
         return None
 
-    # 1. Try real-world ADSBdb live lookup
+    ref_lat = current_lat if current_lat is not None else 21.0922
+    ref_lon = current_lon if current_lon is not None else 79.0472
+    hub_key = hub_name if (hub_name and hub_name in AIRPORTS) else get_closest_hub_key(ref_lat, ref_lon)
+    hub_info = AIRPORTS.get(hub_key, AIRPORTS["Nagpur (VANP)"])
+
+    # 1. PRIORITY 1: Check if this callsign is a scheduled route assigned to the active hub!
+    matched_flight = next((sf for sf in hub_info.get("sample_flights", []) if sf["callsign"].upper() == clean), None)
+    if matched_flight and matched_flight["dest_iata"] in hub_info["destinations"]:
+        dest_info = hub_info["destinations"][matched_flight["dest_iata"]]
+        return {
+            "origin": {
+                "name": hub_info["name"],
+                "city": hub_info["city"],
+                "iata": hub_info["iata"],
+                "icao": hub_info["icao"],
+                "latitude": hub_info["lat"],
+                "longitude": hub_info["lon"],
+                "elevation": hub_info["elevation"]
+            },
+            "destination": {
+                "name": dest_info["name"],
+                "city": dest_info["city"],
+                "iata": dest_info["iata"],
+                "icao": dest_info["icao"],
+                "latitude": dest_info["latitude"],
+                "longitude": dest_info["longitude"],
+                "elevation": dest_info["elevation"]
+            },
+            "airline": matched_flight.get("airline", infer_airline(clean)),
+            "callsign": clean,
+            "source": f"AeroGuard Airway Corridor ({hub_info['iata']} Sector)"
+        }
+
+    # Also check if it's explicitly assigned in ANY other hub's sample flights:
+    for hk, hdata in AIRPORTS.items():
+        mf = next((sf for sf in hdata.get("sample_flights", []) if sf["callsign"].upper() == clean), None)
+        if mf and mf["dest_iata"] in hdata["destinations"]:
+            dest_info = hdata["destinations"][mf["dest_iata"]]
+            return {
+                "origin": {
+                    "name": hdata["name"],
+                    "city": hdata["city"],
+                    "iata": hdata["iata"],
+                    "icao": hdata["icao"],
+                    "latitude": hdata["lat"],
+                    "longitude": hdata["lon"],
+                    "elevation": hdata["elevation"]
+                },
+                "destination": {
+                    "name": dest_info["name"],
+                    "city": dest_info["city"],
+                    "iata": dest_info["iata"],
+                    "icao": dest_info["icao"],
+                    "latitude": dest_info["latitude"],
+                    "longitude": dest_info["longitude"],
+                    "elevation": dest_info["elevation"]
+                },
+                "airline": mf.get("airline", infer_airline(clean)),
+                "callsign": clean,
+                "source": f"AeroGuard Airway Corridor ({hdata['iata']} Sector)"
+            }
+
+    # 2. PRIORITY 2: Live ADS-B Datalink (for real uncataloged transponders picked up by OpenSky)
     try:
         url = f"https://api.adsbdb.com/v0/callsign/{clean}"
-        resp = requests.get(url, timeout=4, headers={"User-Agent": "AeroGuard-Avionics/2.0"})
+        resp = requests.get(url, timeout=3, headers={"User-Agent": "AeroGuard-Avionics/2.0"})
         if resp.status_code == 200:
             payload = resp.json().get("response", {}).get("flightroute") or {}
             orig_data = payload.get("origin")
@@ -648,95 +711,58 @@ def lookup_route(callsign: str, current_lat: Optional[float] = None, current_lon
                 dest_lat = float(dest_data.get("latitude"))
                 dest_lon = float(dest_data.get("longitude"))
 
-                # Check sanity: if current_lat, current_lon is provided,
-                # is this aircraft reasonably close to the origin-destination corridor?
-                corridor_ok = True
-                if current_lat is not None and current_lon is not None:
-                    d_orig = distance_km(current_lat, current_lon, orig_lat, orig_lon)
-                    d_dest = distance_km(current_lat, current_lon, dest_lat, dest_lon)
-                    if d_orig > 3500 and d_dest > 3500:
-                        corridor_ok = False
-
-                if corridor_ok:
-                    origin = {
-                        "name": orig_data.get("name") or "Origin Airport",
-                        "city": orig_data.get("municipality") or orig_data.get("country_name") or "",
-                        "iata": orig_data.get("iata_code") or "DEP",
-                        "icao": orig_data.get("icao_code") or "",
-                        "latitude": orig_lat,
-                        "longitude": orig_lon,
-                        "elevation": orig_data.get("elevation") or 0
-                    }
-                    destination = {
-                        "name": dest_data.get("name") or "Destination Airport",
-                        "city": dest_data.get("municipality") or dest_data.get("country_name") or "",
-                        "iata": dest_data.get("iata_code") or "ARR",
-                        "icao": dest_data.get("icao_code") or "",
-                        "latitude": dest_lat,
-                        "longitude": dest_lon,
-                        "elevation": dest_data.get("elevation") or 0
-                    }
-                    airline_name = airline_data.get("name") if isinstance(airline_data, dict) else str(airline_data)
-                    return {
-                        "origin": origin,
-                        "destination": destination,
-                        "airline": airline_name or "Commercial Carrier",
-                        "callsign": clean,
-                        "source": "ADSBdb Air Traffic Datalink"
-                    }
+                origin = {
+                    "name": orig_data.get("name") or "Origin Airport",
+                    "city": orig_data.get("municipality") or orig_data.get("country_name") or "",
+                    "iata": orig_data.get("iata_code") or "DEP",
+                    "icao": orig_data.get("icao_code") or "",
+                    "latitude": orig_lat,
+                    "longitude": orig_lon,
+                    "elevation": orig_data.get("elevation") or 0
+                }
+                destination = {
+                    "name": dest_data.get("name") or "Destination Airport",
+                    "city": dest_data.get("municipality") or dest_data.get("country_name") or "",
+                    "iata": dest_data.get("iata_code") or "ARR",
+                    "icao": dest_data.get("icao_code") or "",
+                    "latitude": dest_lat,
+                    "longitude": dest_lon,
+                    "elevation": dest_data.get("elevation") or 0
+                }
+                airline_name = airline_data.get("name") if isinstance(airline_data, dict) else str(airline_data)
+                return {
+                    "origin": origin,
+                    "destination": destination,
+                    "airline": airline_name or infer_airline(clean),
+                    "callsign": clean,
+                    "source": "ADSBdb Air Traffic Datalink"
+                }
     except Exception:
         pass
 
-    # 2. Geodetic Dynamic Hub Route Resolution
-    ref_lat = current_lat if current_lat is not None else 21.0922
-    ref_lon = current_lon if current_lon is not None else 79.0472
-    hub_key = get_closest_hub_key(ref_lat, ref_lon)
-    hub_info = AIRPORTS.get(hub_key, AIRPORTS["Nagpur (VANP)"])
-
-    origin_airport = {
-        "name": hub_info["name"],
-        "city": hub_info["city"],
-        "iata": hub_info["iata"],
-        "icao": hub_info["icao"],
-        "latitude": hub_info["lat"],
-        "longitude": hub_info["lon"],
-        "elevation": hub_info["elevation"]
-    }
-
-    # Match callsign in this hub's sample flights or known route registry
-    matched_flight = next((sf for sf in hub_info.get("sample_flights", []) if sf["callsign"].upper() == clean), None)
-    
-    if matched_flight and matched_flight["dest_iata"] in hub_info["destinations"]:
-        dest_info = hub_info["destinations"][matched_flight["dest_iata"]]
-        dest_airport = {
-            "name": dest_info["name"],
-            "city": dest_info["city"],
-            "iata": dest_info["iata"],
-            "icao": dest_info["icao"],
-            "latitude": dest_info["latitude"],
-            "longitude": dest_info["longitude"],
-            "elevation": dest_info["elevation"]
-        }
-        airline_name = matched_flight.get("airline", "Commercial Carrier")
-    else:
-        # Pick the premier destination for this hub
-        first_dest_key = list(hub_info["destinations"].keys())[0]
-        dest_info = hub_info["destinations"][first_dest_key]
-        dest_airport = {
-            "name": dest_info["name"],
-            "city": dest_info["city"],
-            "iata": dest_info["iata"],
-            "icao": dest_info["icao"],
-            "latitude": dest_info["latitude"],
-            "longitude": dest_info["longitude"],
-            "elevation": dest_info["elevation"]
-        }
-        airline_name = infer_airline(clean)
-
+    # 3. PRIORITY 3: Geodetic Dynamic Hub Route Fallback
+    first_dest_key = list(hub_info["destinations"].keys())[0]
+    dest_info = hub_info["destinations"][first_dest_key]
     return {
-        "origin": origin_airport,
-        "destination": dest_airport,
-        "airline": airline_name,
+        "origin": {
+            "name": hub_info["name"],
+            "city": hub_info["city"],
+            "iata": hub_info["iata"],
+            "icao": hub_info["icao"],
+            "latitude": hub_info["lat"],
+            "longitude": hub_info["lon"],
+            "elevation": hub_info["elevation"]
+        },
+        "destination": {
+            "name": dest_info["name"],
+            "city": dest_info["city"],
+            "iata": dest_info["iata"],
+            "icao": dest_info["icao"],
+            "latitude": dest_info["latitude"],
+            "longitude": dest_info["longitude"],
+            "elevation": dest_info["elevation"]
+        },
+        "airline": infer_airline(clean),
         "callsign": clean,
         "source": f"AeroGuard Airway Corridor ({hub_info['iata']} Sector)"
     }
@@ -1097,8 +1123,13 @@ def select_flight(flight):
     st.session_state.anomaly_count = 0
     st.session_state.emergency = False
     st.session_state.emergency_issue = None
-    st.session_state.route = None
-    st.session_state.route_checked = False
+    st.session_state.route = lookup_route(
+        flight["callsign"],
+        lat,
+        lon,
+        hub_name=st.session_state.location_source
+    )
+    st.session_state.route_checked = True
     st.session_state.ground_report = None
     st.session_state.last_snapshot_time = 0.0
 
@@ -2071,7 +2102,8 @@ def main():
         st.session_state.route = lookup_route(
             st.session_state.selected_callsign,
             float(tgt_lat),
-            float(tgt_lon)
+            float(tgt_lon),
+            hub_name=st.session_state.location_source
         )
         st.session_state.route_checked = True
 
