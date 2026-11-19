@@ -1,0 +1,2 @@
+threshold,accuracy,precision,recall,f1,false_positive_rate,miss_rate,tn,fp,fn,tp,split_seed,train_windows,validation_windows,test_windows,train_groups,validation_groups,test_groups,threshold_selection_rule,label_definition
+0.4199999999999998,0.774097096545755,0.6176406215802145,0.7151545869234668,0.6628302994715208,0.19936094944653657,0.2848454130765332,7016,1747,1124,2822,42,36662,10066,12709,7676,1920,2399,Maximum validation recall with FPR <= 20%,"Post first observed squawk 7700 declaration; proxy label, not verified mechanical failure."

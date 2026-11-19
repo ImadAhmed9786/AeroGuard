@@ -1,0 +1,144 @@
+# MAIN MONITORING LOOP
+# ============================================================
+
+print("\nStarting AeroGuard monitoring...")
+print("Aircraft:", AIRCRAFT_ID)
+print("Recording window: 45 minutes")
+print("Collection interval:", COLLECTION_INTERVAL, "seconds")
+print("AI window:", AI_WINDOW, "non-overlapping observations")
+print("Press E to trigger a TEST EMERGENCY.")
+print("Press Ctrl+C to stop.")
+print("Research prototype only. No real ATC connection.")
+print("=" * 60)
+
+next_poll = time.monotonic()
+
+try:
+    while True:
+        check_test_command()
+        trigger_test_emergency()
+
+        now = time.monotonic()
+
+        if now < next_poll:
+            time.sleep(0.1)
+            continue
+
+        next_poll = time.monotonic() + COLLECTION_INTERVAL
+
+        try:
+            response = api.get_states(icao24=[AIRCRAFT_ID])
+        except Exception as exc:
+            print(f"OpenSky request failed: {exc}")
+            continue
+
+        if response is None or not response.states:
+            print("No OpenSky observation. Existing recording retained.")
+            continue
+
+        state = next(
+            (
+                item for item in response.states
+                if item.icao24
+                and item.icao24.lower() == AIRCRAFT_ID
+            ),
+            None,
+        )
+
+        if state is None:
+            print("Selected aircraft not present in response.")
+            continue
+
+        required = (
+            state.latitude,
+            state.longitude,
+            state.baro_altitude,
+            state.velocity,
+            state.true_track,
+            state.vertical_rate,
+            state.time_position,
+        )
+
+        if any(value is None for value in required):
+            print("Incomplete telemetry. Observation skipped.")
+            continue
+
+        observation_time = float(state.time_position)
+        current_time = datetime.now(timezone.utc).timestamp()
+        age = current_time - observation_time
+
+        if age > 60 or age < -10:
+            print(f"Stale/future observation skipped. Age: {age:.1f}s")
+            continue
+
+        if (
+            last_observation_timestamp is not None
+            and observation_time <= last_observation_timestamp
+        ):
+            print("Duplicate or older observation skipped.")
+            continue
+
+        last_observation_timestamp = observation_time
+
+        timestamp = datetime.fromtimestamp(
+            observation_time, timezone.utc
+        ).isoformat()
+
+        record = {
+            "timestamp": timestamp,
+            "timestamp_unix": observation_time,
+            "icao24": state.icao24,
+            "callsign": (state.callsign or "").strip(),
+            "latitude": state.latitude,
+            "longitude": state.longitude,
+            "baro_altitude": state.baro_altitude,
+            "geo_altitude": state.geo_altitude,
+            "velocity": float(state.velocity),
+            "heading": float(state.true_track),
+            "vertical_rate": float(state.vertical_rate),
+            "on_ground": state.on_ground,
+            "squawk": state.squawk,
+        }
+
+        recording.append(record)
+        ai_history.append(record)
+
+        cutoff = observation_time - RECORDING_SECONDS
+
+        while (
+            recording
+            and recording[0]["timestamp_unix"] < cutoff
+        ):
+            recording.popleft()
+
+        print(
+            f"{timestamp[11:19]} UTC | "
+            f"Recorded {len(recording)} observations | "
+            f"AI batch {len(ai_history)}/{AI_WINDOW} | "
+            f"ALT {state.baro_altitude:.1f} m | "
+            f"SPEED {state.velocity:.1f} m/s"
+        )
+
+        # Save snapshots without overwriting emergency evidence.
+        snapshot_now = time.monotonic()
+
+        if (
+            snapshot_now - last_snapshot_time
+            >= SNAPSHOT_INTERVAL_SECONDS
+        ):
+            save_rolling_snapshot()
+            last_snapshot_time = snapshot_now
+
+        try:
+            run_ai()
+        finally:
+            append_post_trigger_telemetry(record)
+
+except KeyboardInterrupt:
+    print("\nStopping AeroGuard...")
+    save_rolling_snapshot()
+    print("Monitoring stopped.")
+
+except Exception as exc:
+    print(f"\nAeroGuard stopped due to an unexpected error: {exc}")
+    save_rolling_snapshot()

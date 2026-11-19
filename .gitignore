@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.env
+.venv/
+env/
+venv/
+
+# Binaries & Executables
+*.exe
+*.dll
+
+# Secrets & Credentials
+credentials.json
+.streamlit/secrets.toml
+
+# Heavy Raw Parquet & Training Data
+DASHlink*
+*.parquet*
+*.gz
+*.tar
+squawk7700*
+real_emergency*
+real_training*
+training_data.csv
+
+# Large Uncompressed / Intermediate Models in Root
+aeroguard_model*.pkl
+aeroguard_single_pre*
+aeroguard_dashboard_backup*
+
+# Data Folder - Ignore massive raw data files
+data/queue*.csv
+data/normal_flight_data.csv
+data/emergencies/
+data/ground_station/
+data/recordings/
+data/*.txt
