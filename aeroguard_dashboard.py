@@ -1268,6 +1268,168 @@ def main():
             color: var(--foc-gold);
             font-family: 'Chivo Mono', monospace;
         }
+
+        /* ========================================================
+           MOBILE RESPONSIVENESS & ACCESSIBILITY (SCREEN <= 768px)
+           ======================================================== */
+        @media (max-width: 768px) {
+            /* General page spacing */
+            .main .block-container {
+                padding: 1rem 0.75rem 2rem 0.75rem !important;
+            }
+
+            /* Masthead: Stacked & Thumb-Friendly */
+            .foc-masthead {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                padding: 12px 14px !important;
+                gap: 12px !important;
+            }
+            .foc-brand-group {
+                flex-direction: row !important;
+                align-items: center !important;
+                gap: 10px !important;
+                width: 100% !important;
+            }
+            .foc-insignia {
+                font-size: 13px !important;
+                padding: 6px 10px !important;
+            }
+            .foc-title-block h1 {
+                font-size: 15px !important;
+                letter-spacing: 0.5px !important;
+                line-height: 1.25 !important;
+            }
+            .foc-title-block p {
+                font-size: 9px !important;
+                letter-spacing: 0.3px !important;
+            }
+            .foc-telemetry-status-cluster {
+                flex-wrap: wrap !important;
+                gap: 6px !important;
+                width: 100% !important;
+            }
+            .foc-pill {
+                font-size: 10px !important;
+                padding: 5px 10px !important;
+                flex: 1 1 auto !important;
+                justify-content: center !important;
+            }
+
+            /* Electronic Flight Strip: Clean Mobile Wrap */
+            .foc-flight-strip {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                padding: 14px 16px !important;
+                gap: 12px !important;
+            }
+            .foc-airport-node {
+                text-align: left !important;
+            }
+            .foc-airport-iata {
+                font-size: 26px !important;
+            }
+            .foc-route-vector {
+                width: 100% !important;
+                padding: 10px 0 !important;
+                border-top: 1px dashed var(--foc-border) !important;
+                border-bottom: 1px dashed var(--foc-border) !important;
+            }
+            .foc-route-line-bar {
+                width: 100% !important;
+                justify-content: center !important;
+            }
+            .foc-route-line {
+                width: 80px !important;
+            }
+            .foc-transponder-block {
+                text-align: left !important;
+                border-top: 1px dashed var(--foc-border) !important;
+                padding-top: 10px !important;
+            }
+
+            /* Responsive Metrics Grid: 2 columns on mobile instead of crushed 5 columns */
+            div[data-testid="column"] {
+                min-width: calc(50% - 8px) !important;
+                flex: 1 1 calc(50% - 8px) !important;
+                margin-bottom: 8px !important;
+            }
+            div[data-testid="stHorizontalBlock"] {
+                flex-wrap: wrap !important;
+                gap: 8px !important;
+            }
+            [data-testid="stMetric"] {
+                padding: 8px 12px !important;
+            }
+            [data-testid="stMetricLabel"] {
+                font-size: 9px !important;
+                letter-spacing: 0.5px !important;
+            }
+            [data-testid="stMetricValue"] {
+                font-size: 17px !important;
+            }
+            [data-testid="stMetricDelta"] {
+                font-size: 10px !important;
+            }
+
+            /* Operations Tabs: Smooth horizontal swipeable pill bar */
+            .stTabs [data-baseweb="tab-list"] {
+                overflow-x: auto !important;
+                flex-wrap: nowrap !important;
+                -webkit-overflow-scrolling: touch !important;
+                scrollbar-width: none !important;
+                gap: 4px !important;
+                padding-bottom: 4px !important;
+            }
+            .stTabs [data-baseweb="tab-list"]::-webkit-scrollbar {
+                display: none !important;
+            }
+            .stTabs [data-baseweb="tab"] {
+                padding: 8px 12px !important;
+                font-size: 11px !important;
+                white-space: nowrap !important;
+                flex-shrink: 0 !important;
+            }
+
+            /* Standby Mission Control Console on Mobile */
+            .foc-standby-console {
+                padding: 16px 14px !important;
+            }
+            .foc-standby-hub-box {
+                width: 100% !important;
+                padding: 10px 14px !important;
+            }
+            .foc-hub-val {
+                font-size: 14px !important;
+            }
+
+            /* Touch-Friendly Mobile Buttons */
+            .stButton > button {
+                min-height: 44px !important;
+                font-size: 12px !important;
+                width: 100% !important;
+            }
+
+            /* Airframe Dossier Card in Tab 2 */
+            .foc-airframe-card {
+                padding: 16px 14px !important;
+            }
+            .foc-airframe-name {
+                font-size: 20px !important;
+            }
+            .foc-type-code-box {
+                width: 100% !important;
+                text-align: left !important;
+                margin-top: 10px !important;
+            }
+
+            /* PyDeck Chart Container */
+            div[data-testid="stDeckGlChart"] {
+                border-radius: 8px !important;
+                overflow: hidden !important;
+                border: 1px solid var(--foc-border) !important;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
