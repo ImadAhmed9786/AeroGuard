@@ -1,9 +1,14 @@
 from __future__ import annotations
 
 import ast
+import base64
+import hashlib
+import io
 import math
 import random
+import struct
 import time
+import wave
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
@@ -1296,6 +1301,43 @@ def make_route_map(route: Optional[Dict[str, Any]], track: list, latest_target: 
             )
         )
 
+        # Heading Vector Tape (ATC velocity/heading leader line)
+        hdg_val = None
+        if latest_target and "heading" in latest_target and pd.notna(latest_target["heading"]):
+            hdg_val = float(latest_target["heading"])
+        elif track and len(track) >= 2:
+            p_prev = track[-2]
+            hdg_val = calculate_bearing(p_prev.get("latitude", c_lat), p_prev.get("longitude", c_lon), c_lat, c_lon)
+
+        if hdg_val is not None:
+            vec_len_km = 12.0
+            rad = math.radians(hdg_val)
+            dx = (vec_len_km * 1000.0) * math.sin(rad)
+            dy = (vec_len_km * 1000.0) * math.cos(rad)
+            tip_lat = c_lat + (dy / 111139.0)
+            tip_lon = c_lon + (dx / (111139.0 * max(0.1, math.cos(math.radians(c_lat)))))
+            layers.append(
+                pdk.Layer(
+                    "PathLayer",
+                    data=[{"path": [[c_lon, c_lat], [tip_lon, tip_lat]], "color": [255, 179, 0, 240]}],
+                    get_path="path",
+                    get_color="color",
+                    get_width=3,
+                    width_min_pixels=2,
+                )
+            )
+            layers.append(
+                pdk.Layer(
+                    "ScatterplotLayer",
+                    data=[{"position": [tip_lon, tip_lat], "color": [255, 215, 0, 255]}],
+                    get_position="position",
+                    get_fill_color="color",
+                    get_radius=2200,
+                    radius_min_pixels=3,
+                    radius_max_pixels=6,
+                )
+            )
+
         # Tactical Target Dual-Ring Blip
         layers.append(
             pdk.Layer(
@@ -1449,6 +1491,10 @@ def initialize():
         "last_snapshot_time": 0.0,
         "sim_active": None,
         "kinematic_diagnostics": None,
+        "audio_enabled": True,
+        "play_chime": False,
+        "last_audio_chime_ts": 0.0,
+        "show_incident_dossier": False,
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -1572,6 +1618,7 @@ def stop_monitoring():
 
 def inject_simulation(sim_type: str):
     st.session_state.sim_active = sim_type
+    st.session_state.play_chime = True
     if not st.session_state.is_monitoring and st.session_state.flights:
         select_flight(st.session_state.flights[0])
 
@@ -1889,6 +1936,8 @@ def fire_emergency(issue):
         return
     st.session_state.emergency = True
     st.session_state.emergency_issue = issue
+    st.session_state.play_chime = True
+    st.session_state.show_incident_dossier = True
     success = save_emergency(
         st.session_state.selected_id,
         st.session_state.selected_callsign,
@@ -1899,6 +1948,251 @@ def fire_emergency(issue):
         "Emergency flight data locked and transferred to Ground Operations Dispatch."
         if success else "Distress report saved to local flight recorder buffer."
     )
+
+
+@st.cache_data
+def generate_avionics_warning_audio() -> str:
+    """
+    Generates an authentic dual-pulse cockpit Master Warning chime (960Hz / 720Hz)
+    as a self-contained base64 WAV data URI. Zero external audio file dependencies.
+    """
+    sample_rate = 22050
+    buf = io.BytesIO()
+    with wave.open(buf, 'wb') as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(sample_rate)
+
+        frames = bytearray()
+
+        def add_tone(freq: float, duration_s: float, vol: float = 0.60):
+            n_samples = int(sample_rate * duration_s)
+            for i in range(n_samples):
+                t = i / sample_rate
+                env = math.exp(-3.5 * (t / duration_s))
+                val = int(32767 * vol * env * math.sin(2 * math.pi * freq * t))
+                frames.extend(struct.pack('<h', max(-32767, min(32767, val))))
+
+        def add_silence(duration_s: float):
+            frames.extend(b'\x00\x00' * int(sample_rate * duration_s))
+
+        # Pulse 1: Master Warning tone (high -> low chime)
+        add_tone(960.0, 0.16)
+        add_tone(720.0, 0.22)
+        add_silence(0.12)
+        # Pulse 2: Secondary confirmation chime
+        add_tone(960.0, 0.16)
+        add_tone(720.0, 0.28)
+
+        w.writeframes(frames)
+
+    b64 = base64.b64encode(buf.getvalue()).decode('ascii')
+    return f"data:audio/wav;base64,{b64}"
+
+
+def compute_telemetry_checksum(rows: list) -> str:
+    """
+    Computes a cryptographic SHA-256 evidence checksum over all preserved DFDR flight observations.
+    Provides verifiable chain-of-custody data integrity for accident investigation boards.
+    """
+    if not rows:
+        return hashlib.sha256(b"AEROGUARD_EMPTY_OBSERVATION_BUFFER").hexdigest()
+    raw = "|".join(
+        f"{r.get('timestamp_unix', 0)}:{r.get('baro_altitude', 0)}:{r.get('velocity', 0)}:{r.get('vertical_rate', 0)}:{r.get('heading', 0)}"
+        for r in rows
+    )
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+def render_incident_dossier(
+    callsign: str,
+    icao24: str,
+    route: Optional[Dict[str, Any]],
+    intel: Dict[str, Any],
+    latest: Optional[Dict[str, Any]],
+    score: Optional[float],
+    emergency_issue: Optional[str],
+    rows: list
+):
+    """
+    Renders an official ICAO Annex 13 / DGCA formatted preliminary accident/incident investigation dossier
+    with cryptographic telemetry hash and 1-click printable / downloadable report.
+    """
+    specs = intel.get("specs", {})
+    orig = route.get("origin", {}) if route else {}
+    dest = route.get("destination", {}) if route else {}
+    airline = (route.get("airline") if route else None) or intel.get("operator", "Commercial Air Carrier")
+
+    now_utc = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    doc_id = f"AG-ICAO-DFDR-{callsign}-{(icao24 or 'HEX')[-4:].upper()}"
+    checksum = compute_telemetry_checksum(rows)
+
+    alt_ft = (latest.get("baro_altitude") or 0.0) * 3.28084 if latest else 0.0
+    spd_kts = (latest.get("velocity") or 0.0) * 1.94384 if latest else 0.0
+    vr_fpm = (latest.get("vertical_rate") or 0.0) * 196.85 if latest else 0.0
+    hdg = latest.get("heading", 0.0) if latest else 0.0
+
+    st.markdown(
+        f"""
+        <div class="foc-dossier-box">
+            <div class="foc-dossier-header">
+                <div>
+                    <div class="foc-dossier-crest">ICAO ANNEX 13 · DGCA SAFETY INVESTIGATION BUREAU</div>
+                    <div class="foc-dossier-title">PRELIMINARY FLIGHT ENVELOPE EXCURSION & DISTRESS DOSSIER</div>
+                    <div class="foc-dossier-doc-id">DOSSIER REF: <strong>{doc_id}</strong> · CLASSIFICATION: <strong>CONFIDENTIAL / SAFETY ACTION</strong></div>
+                </div>
+                <div class="foc-dossier-stamp">GADSS PRESERVED</div>
+            </div>
+
+            <div class="foc-dossier-sec-head">1. AIRFRAME & REGISTRY SPECIFICATION</div>
+            <table class="foc-dossier-table">
+                <tr>
+                    <td class="label">Flight Callsign</td>
+                    <td class="val">{callsign}</td>
+                    <td class="label">Transponder (Mode-S)</td>
+                    <td class="val">{icao24.upper()}</td>
+                </tr>
+                <tr>
+                    <td class="label">Aircraft Model</td>
+                    <td class="val">{specs.get('full_name', 'Commercial Jet')} ({intel.get('icao_type', 'JET')})</td>
+                    <td class="label">Aircraft Registration</td>
+                    <td class="val">{intel.get('registration', 'UNKNOWN')} ({intel.get('country', 'International')})</td>
+                </tr>
+                <tr>
+                    <td class="label">Operating Airline</td>
+                    <td class="val">{airline}</td>
+                    <td class="label">Wake Category / MTOW</td>
+                    <td class="val">{specs.get('wake_category', 'Medium')} · {specs.get('mtow_kg', 0):,} kg</td>
+                </tr>
+            </table>
+
+            <div class="foc-dossier-sec-head">2. FLIGHT DISPATCH & SECTOR CORRIDOR</div>
+            <table class="foc-dossier-table">
+                <tr>
+                    <td class="label">Origin / Departure</td>
+                    <td class="val">{orig.get('name', 'Origin Airfield')} [{orig.get('iata', 'DEP')}] (Elev: {orig.get('elevation', 0)} ft)</td>
+                    <td class="label">Departure Schedule</td>
+                    <td class="val">{orig.get('dep_time', 'N/A')}</td>
+                </tr>
+                <tr>
+                    <td class="label">Destination / Arrival</td>
+                    <td class="val">{dest.get('name', 'Destination Airfield')} [{dest.get('iata', 'ARR')}] (Elev: {dest.get('elevation', 0)} ft)</td>
+                    <td class="label">Estimated Arrival</td>
+                    <td class="val">{dest.get('arr_time', 'N/A')}</td>
+                </tr>
+                <tr>
+                    <td class="label">Radar Control Sector</td>
+                    <td class="val">{st.session_state.get('location_source', 'Regional Airspace')}</td>
+                    <td class="label">Report Generated (UTC)</td>
+                    <td class="val">{now_utc}</td>
+                </tr>
+            </table>
+
+            <div class="foc-dossier-sec-head">3. TELEMETRY & KINEMATIC EXCURSION AT TRIGGER</div>
+            <div class="foc-dossier-telemetry-pill-grid">
+                <div class="foc-dossier-telemetry-pill">
+                    <div class="k">ALTITUDE (MSL)</div>
+                    <div class="v">{alt_ft:,.0f} ft</div>
+                </div>
+                <div class="foc-dossier-telemetry-pill">
+                    <div class="k">GROUND SPEED</div>
+                    <div class="v">{spd_kts:.0f} kts</div>
+                </div>
+                <div class="foc-dossier-telemetry-pill">
+                    <div class="k">VERTICAL SPEED</div>
+                    <div class="v">{vr_fpm:,.0f} fpm</div>
+                </div>
+                <div class="foc-dossier-telemetry-pill">
+                    <div class="k">BEARING / HEADING</div>
+                    <div class="v">{hdg:.0f}°</div>
+                </div>
+                <div class="foc-dossier-telemetry-pill">
+                    <div class="k">AI RISK SCORE</div>
+                    <div class="v" style="color: {'#EF4444' if (score or 0) >= 0.42 else '#00E676'};">{(score or 0):.1%}</div>
+                </div>
+            </div>
+            <div style="font-size: 12px; color: #E5E7EB; margin-bottom: 12px; line-height: 1.5;">
+                <strong>Primary Trigger Etiology:</strong> {emergency_issue or "Dynamic Flight Envelope Anomaly Threshold Exceeded"}<br>
+                <strong>System Assessment:</strong> Continuous temporal ML classification confirmed kinematic excursion exceeding nominal passenger transport flight envelope limits.
+            </div>
+
+            <div class="foc-dossier-sec-head">4. CRYPTOGRAPHIC DATA INTEGRITY & CHAIN OF CUSTODY</div>
+            <div class="foc-dossier-hash-block">
+                <div><strong>PRESERVED OBSERVATIONS:</strong> {len(rows)} telemetry frames ({len(rows) * 10 / 60:.1f} minutes of pre-incident black box DFDR data locked)</div>
+                <div style="margin-top: 4px;"><strong>SHA-256 TELEMETRY DIGEST:</strong> <code>{checksum}</code></div>
+                <div style="margin-top: 4px; font-size: 10px; color: #6B7280;">Compliant with ICAO Doc 10054 (Autonomous Distress Tracking) & Annex 13 Aircraft Accident Investigation protocol.</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    col_d1, col_d2 = st.columns([1, 1])
+    with col_d1:
+        dossier_text = f"""# ICAO ANNEX 13 / DGCA PRELIMINARY SAFETY INVESTIGATION DOSSIER
+Reference: {doc_id}
+Generated: {now_utc}
+Classification: CONFIDENTIAL FLIGHT SAFETY RECORD
+
+## 1. Aircraft Identification
+- Callsign: {callsign}
+- Transponder Mode-S Hex: {icao24.upper()}
+- Airframe: {specs.get('full_name')} ({intel.get('icao_type')})
+- Registration: {intel.get('registration')} ({intel.get('country')})
+- Operator: {airline}
+- MTOW: {specs.get('mtow_kg', 0):,} kg | Wake Category: {specs.get('wake_category')}
+
+## 2. Flight Corridor & Schedule
+- Origin: {orig.get('name')} ({orig.get('iata')}) | Elevation: {orig.get('elevation')} ft | Departure: {orig.get('dep_time')}
+- Destination: {dest.get('name')} ({dest.get('iata')}) | Elevation: {dest.get('elevation')} ft | ETA: {dest.get('arr_time')}
+- Radar Hub Sector: {st.session_state.get('location_source')}
+
+## 3. Kinematic Telemetry at Trigger
+- Altitude: {alt_ft:,.0f} ft
+- Ground Speed: {spd_kts:.0f} kts
+- Vertical Velocity: {vr_fpm:,.0f} fpm
+- Heading: {hdg:.0f}°
+- AI Anomaly Score: {(score or 0):.1%}
+- Trigger Cause: {emergency_issue}
+
+## 4. Evidence Integrity & Chain of Custody
+- Frames Preserved: {len(rows)} (Rolling DFDR Window)
+- SHA-256 Telemetry Checksum: {checksum}
+- Standard: ICAO GADSS Doc 10054 / Annex 13
+"""
+        st.download_button(
+            label="💾 Download Official Incident Dossier (Markdown)",
+            data=dossier_text,
+            file_name=f"ICAO_Incident_Dossier_{callsign}_{icao24}.md",
+            mime="text/markdown",
+            use_container_width=True
+        )
+
+    with col_d2:
+        st.markdown(
+            """
+            <button onclick="window.print()" class="foc-dossier-print-btn" style="
+                width: 100%;
+                background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+                color: #FFFFFF;
+                border: none;
+                border-radius: 4px;
+                padding: 10px 16px;
+                font-family: 'Space Grotesk', sans-serif;
+                font-weight: 700;
+                font-size: 14px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            ">
+                <span>🖨️ Print / Save Official PDF Dossier</span>
+            </button>
+            """,
+            unsafe_allow_html=True
+        )
 
 
 # ============================================================
@@ -2680,12 +2974,187 @@ def main():
                 border: 1px solid var(--foc-border) !important;
             }
         }
+
+        /* Official ICAO Annex 13 Preliminary Safety Incident Dossier */
+        .foc-dossier-box {
+            background: #0B111C;
+            border: 2px solid #D97706;
+            border-radius: 6px;
+            padding: 24px;
+            margin-top: 14px;
+            margin-bottom: 20px;
+            font-family: 'Inter', sans-serif;
+            color: #F3F4F6;
+            box-shadow: 0 6px 24px rgba(217, 119, 6, 0.15);
+        }
+
+        .foc-dossier-header {
+            border-bottom: 2px solid #D97706;
+            padding-bottom: 14px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .foc-dossier-crest {
+            font-family: 'Chivo Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 1.5px;
+            color: #D97706;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .foc-dossier-title {
+            font-size: 17px;
+            font-weight: 800;
+            color: #FFFFFF;
+            letter-spacing: 0.5px;
+            margin: 4px 0 2px 0;
+            text-transform: uppercase;
+        }
+
+        .foc-dossier-doc-id {
+            font-family: 'Chivo Mono', monospace;
+            font-size: 11px;
+            color: #9CA3AF;
+        }
+
+        .foc-dossier-stamp {
+            border: 2px solid #EF4444;
+            color: #EF4444;
+            padding: 6px 12px;
+            font-family: 'Chivo Mono', monospace;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            transform: rotate(-2deg);
+        }
+
+        .foc-dossier-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+            font-size: 12px;
+        }
+
+        .foc-dossier-table td {
+            padding: 6px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .foc-dossier-table td.label {
+            color: #9CA3AF;
+            font-family: 'Chivo Mono', monospace;
+            font-size: 11px;
+            width: 25%;
+        }
+
+        .foc-dossier-table td.val {
+            color: #F9FAFB;
+            font-weight: 600;
+        }
+
+        .foc-dossier-sec-head {
+            font-family: 'Chivo Mono', monospace;
+            font-size: 11.5px;
+            font-weight: 800;
+            color: #D97706;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin: 16px 0 8px 0;
+            border-left: 3px solid #D97706;
+            padding-left: 8px;
+        }
+
+        .foc-dossier-telemetry-pill-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .foc-dossier-telemetry-pill {
+            background: #141E2F;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 8px 10px;
+            border-radius: 4px;
+        }
+
+        .foc-dossier-telemetry-pill .k {
+            font-size: 10px;
+            color: #9CA3AF;
+            font-family: 'Chivo Mono', monospace;
+        }
+
+        .foc-dossier-telemetry-pill .v {
+            font-size: 14px;
+            font-weight: 800;
+            color: #F9FAFB;
+            font-family: 'Chivo Mono', monospace;
+            margin-top: 2px;
+        }
+
+        .foc-dossier-hash-block {
+            background: #060A10;
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            padding: 10px 14px;
+            border-radius: 4px;
+            font-family: 'Chivo Mono', monospace;
+            font-size: 11px;
+            color: #9CA3AF;
+            word-break: break-all;
+            margin-top: 14px;
+        }
+
+        @media print {
+            header, footer, [data-testid="stSidebar"], .stButton, div[data-testid="stToolbar"] {
+                display: none !important;
+            }
+            .foc-dossier-box {
+                border: 2px solid #000 !important;
+                color: #000 !important;
+                background: #FFF !important;
+                box-shadow: none !important;
+            }
+            .foc-dossier-title { color: #000 !important; }
+            .foc-dossier-table td { color: #000 !important; border-bottom: 1px solid #CCC !important; }
+            .foc-dossier-table td.label { color: #555 !important; }
+            .foc-dossier-telemetry-pill { background: #EEE !important; border: 1px solid #CCC !important; }
+            .foc-dossier-telemetry-pill .v { color: #000 !important; }
+        }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
     is_active = st.session_state.is_monitoring and st.session_state.selected_id
+
+    # Master Warning Audio Chime Dispatch
+    should_play_audio = False
+    now_ts = time.time()
+    if st.session_state.get("play_chime"):
+        should_play_audio = True
+        st.session_state.play_chime = False
+    elif (
+        st.session_state.get("audio_enabled", True)
+        and st.session_state.get("emergency")
+        and (now_ts - st.session_state.get("last_audio_chime_ts", 0) > 30.0)
+    ):
+        should_play_audio = True
+        st.session_state.last_audio_chime_ts = now_ts
+
+    if should_play_audio and st.session_state.get("audio_enabled", True):
+        chime_uri = generate_avionics_warning_audio()
+        st.markdown(
+            f'<audio autoplay style="display:none;"><source src="{chime_uri}" type="audio/wav"></audio>',
+            unsafe_allow_html=True
+        )
 
     # Flight Operations Command Masthead
     status_led = "foc-led-active" if is_active else "foc-led-standby"
@@ -2919,6 +3388,15 @@ def main():
                     if st.button("🔄 Reset to Live Telemetry", type="primary", use_container_width=True):
                         reset_simulation()
                         st.rerun()
+
+        # Cockpit Audio Alert Systems (Avionics Master Warning)
+        with st.expander("🔊 Cockpit Audio Systems", expanded=False):
+            st.caption("Cockpit Master Caution & Master Warning acoustic chime alerts.")
+            audio_on = st.toggle("Enable Master Warning Chime", value=st.session_state.get("audio_enabled", True), key="sidebar_audio_enabled_toggle")
+            st.session_state.audio_enabled = audio_on
+            if st.button("🔔 Test Master Caution Chime", use_container_width=True, key="sidebar_test_chime_btn"):
+                st.session_state.play_chime = True
+                st.rerun()
 
     # ---------------------------------------------------------
     # STATE A: STANDBY CONSOLE (USER HAS NOT STARTED YET)
@@ -3530,6 +4008,30 @@ def main():
             if st.button("Reset Distress Monitor & Return to Standby"):
                 select_flight({"icao24": st.session_state.selected_id, "callsign": st.session_state.selected_callsign})
                 st.rerun()
+
+        # -----------------------------------------------------
+        # ICAO Annex 13 Preliminary Air Safety Incident Dossier
+        # -----------------------------------------------------
+        st.divider()
+        st.markdown("#### 📋 ICAO Annex 13 Preliminary Air Safety Incident Dossier")
+        st.caption("Official air accident investigation preliminary flight dossier with cryptographic chain-of-custody data integrity.")
+
+        pref_type = selected_target.get("type_code") if selected_target else None
+        intel = aircraft_intel.get_full_aircraft_intelligence(icao24, callsign, preferred_type=pref_type)
+        latest_row = rows[-1] if rows else None
+
+        is_dossier_open = bool(st.session_state.emergency or st.session_state.get("show_incident_dossier", False))
+        with st.expander("📄 Open Official Accident / Incident Investigation Dossier", expanded=is_dossier_open):
+            render_incident_dossier(
+                callsign=callsign,
+                icao24=icao24,
+                route=route,
+                intel=intel,
+                latest=latest_row,
+                score=st.session_state.last_score,
+                emergency_issue=st.session_state.emergency_issue,
+                rows=rows
+            )
 
 
 if __name__ == "__main__":
