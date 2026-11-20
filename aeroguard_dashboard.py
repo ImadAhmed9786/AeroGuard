@@ -6,7 +6,7 @@ import random
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple
 
 import joblib
 import numpy as np
@@ -51,24 +51,113 @@ FEATURE_NAMES = [
     "vertical_rate_abs_mean", "vertical_rate_nonzero_fraction",
 ]
 
-# Hub choices: Nagpur (user) and Bengaluru (friend) featured first!
-CITIES = {
-    "Nagpur (VANP)": (21.0922, 79.0472),
-    "Bengaluru (VOBL)": (13.1979, 77.7063),
-    "Mumbai (VABB)": (19.0886, 72.8679),
-    "Delhi (VIDP)": (28.5665, 77.1031),
-    "Hyderabad (VOHS)": (17.2403, 78.4294),
-    "Chennai (VOMM)": (12.9941, 80.1709),
-    "Kolkata (VECC)": (22.6547, 88.4467),
-    "Pune (VAPO)": (18.5822, 73.9197),
-    "Ahmedabad (VAAH)": (23.0772, 72.6347),
-    "Kochi (VOCI)": (10.1520, 76.3920),
-    "Dubai (OMDB)": (25.2528, 55.3644),
-    "London Heathrow (EGLL)": (51.4700, -0.4543),
-    "Frankfurt (EDDF)": (50.0379, 8.5622),
-    "Singapore (WSSS)": (1.3644, 103.9915),
-    "New York JFK (KJFK)": (40.6413, -73.7781),
+# Extensive Global & Indian Airspace Geocoding Database
+GLOBAL_LOCATIONS = {
+    # Featured Indian Hubs
+    "Nagpur (VANP)": {"city": "Nagpur", "iata": "NAG", "icao": "VANP", "lat": 21.0922, "lon": 79.0472, "country": "India"},
+    "Bengaluru (VOBL)": {"city": "Bengaluru", "iata": "BLR", "icao": "VOBL", "lat": 13.1979, "lon": 77.7063, "country": "India"},
+    "Mumbai (VABB)": {"city": "Mumbai", "iata": "BOM", "icao": "VABB", "lat": 19.0886, "lon": 72.8679, "country": "India"},
+    "Delhi (VIDP)": {"city": "Delhi", "iata": "DEL", "icao": "VIDP", "lat": 28.5665, "lon": 77.1031, "country": "India"},
+    "Hyderabad (VOHS)": {"city": "Hyderabad", "iata": "HYD", "icao": "VOHS", "lat": 17.2403, "lon": 78.4294, "country": "India"},
+    "Chennai (VOMM)": {"city": "Chennai", "iata": "MAA", "icao": "VOMM", "lat": 12.9941, "lon": 80.1709, "country": "India"},
+    "Kolkata (VECC)": {"city": "Kolkata", "iata": "CCU", "icao": "VECC", "lat": 22.6547, "lon": 88.4467, "country": "India"},
+    "Pune (VAPO)": {"city": "Pune", "iata": "PNQ", "icao": "VAPO", "lat": 18.5822, "lon": 73.9197, "country": "India"},
+    "Ahmedabad (VAAH)": {"city": "Ahmedabad", "iata": "AMD", "icao": "VAAH", "lat": 23.0772, "lon": 72.6347, "country": "India"},
+    "Kochi (VOCI)": {"city": "Kochi", "iata": "COK", "icao": "VOCI", "lat": 10.1520, "lon": 76.3920, "country": "India"},
+    "Goa Dabolim (VOGO)": {"city": "Goa", "iata": "GOI", "icao": "VOGO", "lat": 15.3808, "lon": 73.8314, "country": "India"},
+    "Goa Mopa (VOGA)": {"city": "Goa", "iata": "GOX", "icao": "VOGA", "lat": 15.7663, "lon": 73.8647, "country": "India"},
+    "Jaipur (VIJP)": {"city": "Jaipur", "iata": "JAI", "icao": "VIJP", "lat": 26.8242, "lon": 75.8122, "country": "India"},
+    "Lucknow (VILK)": {"city": "Lucknow", "iata": "LKO", "icao": "VILK", "lat": 26.7606, "lon": 80.8893, "country": "India"},
+    "Varanasi (VIBN)": {"city": "Varanasi", "iata": "VNS", "icao": "VIBN", "lat": 25.4524, "lon": 82.8592, "country": "India"},
+    "Chandigarh (VICG)": {"city": "Chandigarh", "iata": "IXC", "icao": "VICG", "lat": 30.6735, "lon": 76.7885, "country": "India"},
+    "Amritsar (VIAR)": {"city": "Amritsar", "iata": "ATQ", "icao": "VIAR", "lat": 31.7096, "lon": 74.7973, "country": "India"},
+    "Srinagar (VISR)": {"city": "Srinagar", "iata": "SXR", "icao": "VISR", "lat": 33.9871, "lon": 74.7741, "country": "India"},
+    "Guwahati (VEGT)": {"city": "Guwahati", "iata": "GAU", "icao": "VEGT", "lat": 26.1061, "lon": 91.5859, "country": "India"},
+    "Bhubaneswar (VEBS)": {"city": "Bhubaneswar", "iata": "BBI", "icao": "VEBS", "lat": 20.2444, "lon": 85.8178, "country": "India"},
+    "Indore (VAID)": {"city": "Indore", "iata": "IDR", "icao": "VAID", "lat": 22.7217, "lon": 75.8011, "country": "India"},
+    "Bhopal (VABP)": {"city": "Bhopal", "iata": "BHO", "icao": "VABP", "lat": 23.2875, "lon": 77.3378, "country": "India"},
+    "Patna (VEPT)": {"city": "Patna", "iata": "PAT", "icao": "VEPT", "lat": 25.5913, "lon": 85.0880, "country": "India"},
+    "Gondia (VAGD)": {"city": "Gondia", "iata": "GDB", "icao": "VAGD", "lat": 21.5125, "lon": 80.2800, "country": "India"},
+    "Coimbatore (VOCB)": {"city": "Coimbatore", "iata": "CJB", "icao": "VOCB", "lat": 11.0299, "lon": 77.0434, "country": "India"},
+    "Visakhapatnam (VOVZ)": {"city": "Visakhapatnam", "iata": "VTZ", "icao": "VOVZ", "lat": 17.7212, "lon": 83.2245, "country": "India"},
+    "Mangalore (VOML)": {"city": "Mangalore", "iata": "IXE", "icao": "VOML", "lat": 12.9613, "lon": 74.8900, "country": "India"},
+    "Thiruvananthapuram (VOTV)": {"city": "Thiruvananthapuram", "iata": "TRV", "icao": "VOTV", "lat": 8.4821, "lon": 76.9200, "country": "India"},
+    "Surat (VASU)": {"city": "Surat", "iata": "STV", "icao": "VASU", "lat": 21.1139, "lon": 72.7419, "country": "India"},
+    "Udaipur (VAUD)": {"city": "Udaipur", "iata": "UDR", "icao": "VAUD", "lat": 24.6177, "lon": 73.8961, "country": "India"},
+    "Raipur (VARP)": {"city": "Raipur", "iata": "RPR", "icao": "VARP", "lat": 21.1804, "lon": 81.7388, "country": "India"},
+    "Ranchi (VERC)": {"city": "Ranchi", "iata": "IXR", "icao": "VERC", "lat": 23.3143, "lon": 85.3217, "country": "India"},
+    "Dehradun (VIDN)": {"city": "Dehradun", "iata": "DED", "icao": "VIDN", "lat": 30.1897, "lon": 78.1803, "country": "India"},
+    "Bagdogra (VEBD)": {"city": "Bagdogra", "iata": "IXB", "icao": "VEBD", "lat": 26.6812, "lon": 88.3286, "country": "India"},
+    "Port Blair (VOPB)": {"city": "Port Blair", "iata": "IXZ", "icao": "VOPB", "lat": 11.6410, "lon": 92.7297, "country": "India"},
+    
+    # Major Global Hubs
+    "Dubai (OMDB)": {"city": "Dubai", "iata": "DXB", "icao": "OMDB", "lat": 25.2528, "lon": 55.3644, "country": "UAE"},
+    "Doha (OTHH)": {"city": "Doha", "iata": "DOH", "icao": "OTHH", "lat": 25.2731, "lon": 51.6081, "country": "Qatar"},
+    "Abu Dhabi (OMAA)": {"city": "Abu Dhabi", "iata": "AUH", "icao": "OMAA", "lat": 24.4330, "lon": 54.6511, "country": "UAE"},
+    "London Heathrow (EGLL)": {"city": "London", "iata": "LHR", "icao": "EGLL", "lat": 51.4700, "lon": -0.4543, "country": "United Kingdom"},
+    "London Gatwick (EGKK)": {"city": "London", "iata": "LGW", "icao": "EGKK", "lat": 51.1537, "lon": -0.1821, "country": "United Kingdom"},
+    "Frankfurt (EDDF)": {"city": "Frankfurt", "iata": "FRA", "icao": "EDDF", "lat": 50.0379, "lon": 8.5622, "country": "Germany"},
+    "Paris CDG (LFPG)": {"city": "Paris", "iata": "CDG", "icao": "LFPG", "lat": 49.0097, "lon": 2.5479, "country": "France"},
+    "Amsterdam (EHAM)": {"city": "Amsterdam", "iata": "AMS", "icao": "EHAM", "lat": 52.3105, "lon": 4.7683, "country": "Netherlands"},
+    "Singapore (WSSS)": {"city": "Singapore", "iata": "SIN", "icao": "WSSS", "lat": 1.3644, "lon": 103.9915, "country": "Singapore"},
+    "Tokyo Haneda (RJTT)": {"city": "Tokyo", "iata": "HND", "icao": "RJTT", "lat": 35.5494, "lon": 139.7798, "country": "Japan"},
+    "Tokyo Narita (RJAA)": {"city": "Tokyo", "iata": "NRT", "icao": "RJAA", "lat": 35.7720, "lon": 140.3929, "country": "Japan"},
+    "Bangkok (VTBS)": {"city": "Bangkok", "iata": "BKK", "icao": "VTBS", "lat": 13.6900, "lon": 100.7501, "country": "Thailand"},
+    "Hong Kong (VHHH)": {"city": "Hong Kong", "iata": "HKG", "icao": "VHHH", "lat": 22.3080, "lon": 113.9185, "country": "Hong Kong"},
+    "Kuala Lumpur (WMKK)": {"city": "Kuala Lumpur", "iata": "KUL", "icao": "WMKK", "lat": 2.7456, "lon": 101.7099, "country": "Malaysia"},
+    "Sydney (YSSY)": {"city": "Sydney", "iata": "SYD", "icao": "YSSY", "lat": -33.9399, "lon": 151.1753, "country": "Australia"},
+    "Melbourne (YMML)": {"city": "Melbourne", "iata": "MEL", "icao": "YMML", "lat": -37.6690, "lon": 144.8410, "country": "Australia"},
+    "New York JFK (KJFK)": {"city": "New York", "iata": "JFK", "icao": "KJFK", "lat": 40.6413, "lon": -73.7781, "country": "USA"},
+    "Los Angeles (KLAX)": {"city": "Los Angeles", "iata": "LAX", "icao": "KLAX", "lat": 33.9416, "lon": -118.4085, "country": "USA"},
+    "Chicago O'Hare (KORD)": {"city": "Chicago", "iata": "ORD", "icao": "KORD", "lat": 41.9742, "lon": -87.9073, "country": "USA"},
+    "San Francisco (KSFO)": {"city": "San Francisco", "iata": "SFO", "icao": "KSFO", "lat": 37.6188, "lon": -122.3750, "country": "USA"},
+    "Toronto (CYYZ)": {"city": "Toronto", "iata": "YYZ", "icao": "CYYZ", "lat": 43.6777, "lon": -79.6248, "country": "Canada"},
+    "Istanbul (LTFM)": {"city": "Istanbul", "iata": "IST", "icao": "LTFM", "lat": 41.2753, "lon": 28.7519, "country": "Turkey"},
+    "Zurich (LSZH)": {"city": "Zurich", "iata": "ZRH", "icao": "LSZH", "lat": 47.4582, "lon": 8.5555, "country": "Switzerland"},
 }
+
+CITIES = {k: (v["lat"], v["lon"]) for k, v in GLOBAL_LOCATIONS.items()}
+
+
+def search_airspace_location(query: str) -> Optional[Tuple[str, float, float]]:
+    """
+    Resolves location string (city name, IATA, ICAO code, or comma-separated 'lat, lon')
+    into (displayName, latitude, longitude).
+    """
+    q = (query or "").strip()
+    if not q:
+        return None
+
+    # Check for direct coordinates like "21.0922, 79.0472" or "21.09,79.05"
+    if "," in q:
+        parts = [p.strip() for p in q.split(",")]
+        if len(parts) == 2:
+            try:
+                lat = float(parts[0])
+                lon = float(parts[1])
+                if -90.0 <= lat <= 90.0 and -180.0 <= lon <= 180.0:
+                    return (f"GPS [{lat:.4f}°, {lon:.4f}°]", lat, lon)
+            except ValueError:
+                pass
+
+    q_lower = q.lower()
+    
+    # 1. Exact match on IATA or ICAO code
+    for name, data in GLOBAL_LOCATIONS.items():
+        if data["iata"].lower() == q_lower or data["icao"].lower() == q_lower:
+            return (name, data["lat"], data["lon"])
+            
+    # 2. Match city name
+    for name, data in GLOBAL_LOCATIONS.items():
+        if data["city"].lower() == q_lower:
+            return (name, data["lat"], data["lon"])
+
+    # 3. Substring match
+    for name, data in GLOBAL_LOCATIONS.items():
+        if q_lower in name.lower() or q_lower in data["city"].lower() or q_lower in data["country"].lower():
+            return (name, data["lat"], data["lon"])
+
+    return None
 
 DESTINATION_AIRPORTS = {
     "BOM": {"name": "Chhatrapati Shivaji Maharaj (BOM)", "city": "Mumbai", "iata": "BOM", "icao": "VABB", "latitude": 19.0886, "longitude": 72.8679, "elevation": 39},
@@ -2337,28 +2426,109 @@ def main():
     # ---------------------------------------------------------
     with st.sidebar:
         st.subheader("Radar Horizon & Operations")
+        
+        target_mode = st.radio(
+            "Airspace Targeting Mode",
+            ["📍 Preset Hubs", "🔍 Search Location", "🌐 Custom Coordinates"],
+            horizontal=False,
+            label_visibility="collapsed",
+            key="sidebar_target_mode"
+        )
+
         city_keys = list(CITIES.keys())
         current_hub = st.session_state.get("location_source", "Nagpur (VANP)")
-        sidebar_idx = city_keys.index(current_hub) if current_hub in city_keys else 0
 
-        selected_city = st.selectbox("Air Traffic Radar Hub", city_keys, index=sidebar_idx, key="sidebar_hub_select")
-        radius_km = st.slider("Horizon Range (km)", min_value=25, max_value=600, value=200, step=25, key="sidebar_radius_slider")
+        if target_mode == "📍 Preset Hubs":
+            sidebar_idx = city_keys.index(current_hub) if current_hub in city_keys else 0
+            selected_city = st.selectbox("Air Traffic Radar Hub", city_keys, index=sidebar_idx, key="sidebar_hub_select")
+            if selected_city != st.session_state.get("location_source"):
+                st.session_state.location_source = selected_city
+                st.session_state.location_lat = CITIES[selected_city][0]
+                st.session_state.location_lon = CITIES[selected_city][1]
+                st.session_state.flights = discover_flights(
+                    load_api(),
+                    st.session_state.location_lat,
+                    st.session_state.location_lon,
+                    st.session_state.get("sidebar_radius_slider", 200),
+                    hub_name=selected_city,
+                )
+                if is_active:
+                    stop_monitoring()
+                st.rerun()
 
-        # Auto-detect hub switch in sidebar
-        if selected_city != st.session_state.get("location_source"):
-            st.session_state.location_source = selected_city
-            st.session_state.location_lat = CITIES[selected_city][0]
-            st.session_state.location_lon = CITIES[selected_city][1]
-            st.session_state.flights = discover_flights(
-                load_api(),
-                st.session_state.location_lat,
-                st.session_state.location_lon,
-                radius_km,
-                hub_name=selected_city,
+        elif target_mode == "🔍 Search Location":
+            search_query = st.text_input(
+                "Search City / Airport",
+                placeholder="e.g. Goa, Tokyo, Paris, HYD, DXB...",
+                key="sidebar_city_search_input"
             )
-            if is_active:
-                stop_monitoring()
-            st.rerun()
+            col_search_btn, col_search_reset = st.columns([2, 1])
+            with col_search_btn:
+                if st.button("🔍 Interrogate", use_container_width=True, key="sidebar_execute_search_btn"):
+                    res = search_airspace_location(search_query)
+                    if res:
+                        st.session_state.location_source = res[0]
+                        st.session_state.location_lat = res[1]
+                        st.session_state.location_lon = res[2]
+                        st.session_state.flights = discover_flights(
+                            load_api(),
+                            res[1],
+                            res[2],
+                            st.session_state.get("sidebar_radius_slider", 200),
+                            hub_name=res[0],
+                        )
+                        if is_active:
+                            stop_monitoring()
+                        st.rerun()
+                    else:
+                        st.error("Location not matched. Try city name, IATA code (e.g. GOI), or 'lat, lon'.")
+            with col_search_reset:
+                if st.button("Reset", use_container_width=True, key="sidebar_reset_search_btn"):
+                    st.session_state.location_source = "Nagpur (VANP)"
+                    st.session_state.location_lat = CITIES["Nagpur (VANP)"][0]
+                    st.session_state.location_lon = CITIES["Nagpur (VANP)"][1]
+                    st.rerun()
+
+        else: # "🌐 Custom Coordinates"
+            col_lat, col_lon = st.columns(2)
+            with col_lat:
+                custom_lat = st.number_input(
+                    "Latitude (°N)",
+                    min_value=-90.0,
+                    max_value=90.0,
+                    value=float(st.session_state.get("location_lat", 21.0922)),
+                    step=0.01,
+                    format="%.4f",
+                    key="sidebar_custom_lat"
+                )
+            with col_lon:
+                custom_lon = st.number_input(
+                    "Longitude (°E)",
+                    min_value=-180.0,
+                    max_value=180.0,
+                    value=float(st.session_state.get("location_lon", 79.0472)),
+                    step=0.01,
+                    format="%.4f",
+                    key="sidebar_custom_lon"
+                )
+            custom_lbl = st.text_input("Sector Label", value="Custom Sector", key="sidebar_custom_label_input")
+            if st.button("📍 Lock Geodetic Sector", type="primary", use_container_width=True, key="sidebar_lock_coords_btn"):
+                sector_name = f"{custom_lbl.strip() or 'Custom Sector'} [{custom_lat:.4f}°, {custom_lon:.4f}°]"
+                st.session_state.location_source = sector_name
+                st.session_state.location_lat = custom_lat
+                st.session_state.location_lon = custom_lon
+                st.session_state.flights = discover_flights(
+                    load_api(),
+                    custom_lat,
+                    custom_lon,
+                    st.session_state.get("sidebar_radius_slider", 200),
+                    hub_name=sector_name,
+                )
+                if is_active:
+                    stop_monitoring()
+                st.rerun()
+
+        radius_km = st.slider("Horizon Range (km)", min_value=25, max_value=600, value=200, step=25, key="sidebar_radius_slider")
 
         if st.button("📡 Scan Horizon for Aircraft", type="primary", use_container_width=True, key="sidebar_scan_btn"):
             try:
