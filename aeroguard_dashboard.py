@@ -51,78 +51,298 @@ FEATURE_NAMES = [
     "vertical_rate_abs_mean", "vertical_rate_nonzero_fraction",
 ]
 
-# Extensive Global & Indian Airspace Geocoding Database
-GLOBAL_LOCATIONS = {
-    # Featured Indian Hubs
-    "Nagpur (VANP)": {"city": "Nagpur", "iata": "NAG", "icao": "VANP", "lat": 21.0922, "lon": 79.0472, "country": "India"},
-    "Bengaluru (VOBL)": {"city": "Bengaluru", "iata": "BLR", "icao": "VOBL", "lat": 13.1979, "lon": 77.7063, "country": "India"},
-    "Mumbai (VABB)": {"city": "Mumbai", "iata": "BOM", "icao": "VABB", "lat": 19.0886, "lon": 72.8679, "country": "India"},
-    "Delhi (VIDP)": {"city": "Delhi", "iata": "DEL", "icao": "VIDP", "lat": 28.5665, "lon": 77.1031, "country": "India"},
-    "Hyderabad (VOHS)": {"city": "Hyderabad", "iata": "HYD", "icao": "VOHS", "lat": 17.2403, "lon": 78.4294, "country": "India"},
-    "Chennai (VOMM)": {"city": "Chennai", "iata": "MAA", "icao": "VOMM", "lat": 12.9941, "lon": 80.1709, "country": "India"},
-    "Kolkata (VECC)": {"city": "Kolkata", "iata": "CCU", "icao": "VECC", "lat": 22.6547, "lon": 88.4467, "country": "India"},
-    "Pune (VAPO)": {"city": "Pune", "iata": "PNQ", "icao": "VAPO", "lat": 18.5822, "lon": 73.9197, "country": "India"},
-    "Ahmedabad (VAAH)": {"city": "Ahmedabad", "iata": "AMD", "icao": "VAAH", "lat": 23.0772, "lon": 72.6347, "country": "India"},
-    "Kochi (VOCI)": {"city": "Kochi", "iata": "COK", "icao": "VOCI", "lat": 10.1520, "lon": 76.3920, "country": "India"},
-    "Goa Dabolim (VOGO)": {"city": "Goa", "iata": "GOI", "icao": "VOGO", "lat": 15.3808, "lon": 73.8314, "country": "India"},
-    "Goa Mopa (VOGA)": {"city": "Goa", "iata": "GOX", "icao": "VOGA", "lat": 15.7663, "lon": 73.8647, "country": "India"},
-    "Jaipur (VIJP)": {"city": "Jaipur", "iata": "JAI", "icao": "VIJP", "lat": 26.8242, "lon": 75.8122, "country": "India"},
-    "Lucknow (VILK)": {"city": "Lucknow", "iata": "LKO", "icao": "VILK", "lat": 26.7606, "lon": 80.8893, "country": "India"},
-    "Varanasi (VIBN)": {"city": "Varanasi", "iata": "VNS", "icao": "VIBN", "lat": 25.4524, "lon": 82.8592, "country": "India"},
-    "Chandigarh (VICG)": {"city": "Chandigarh", "iata": "IXC", "icao": "VICG", "lat": 30.6735, "lon": 76.7885, "country": "India"},
-    "Amritsar (VIAR)": {"city": "Amritsar", "iata": "ATQ", "icao": "VIAR", "lat": 31.7096, "lon": 74.7973, "country": "India"},
-    "Srinagar (VISR)": {"city": "Srinagar", "iata": "SXR", "icao": "VISR", "lat": 33.9871, "lon": 74.7741, "country": "India"},
-    "Guwahati (VEGT)": {"city": "Guwahati", "iata": "GAU", "icao": "VEGT", "lat": 26.1061, "lon": 91.5859, "country": "India"},
-    "Bhubaneswar (VEBS)": {"city": "Bhubaneswar", "iata": "BBI", "icao": "VEBS", "lat": 20.2444, "lon": 85.8178, "country": "India"},
-    "Indore (VAID)": {"city": "Indore", "iata": "IDR", "icao": "VAID", "lat": 22.7217, "lon": 75.8011, "country": "India"},
-    "Bhopal (VABP)": {"city": "Bhopal", "iata": "BHO", "icao": "VABP", "lat": 23.2875, "lon": 77.3378, "country": "India"},
-    "Patna (VEPT)": {"city": "Patna", "iata": "PAT", "icao": "VEPT", "lat": 25.5913, "lon": 85.0880, "country": "India"},
-    "Gondia (VAGD)": {"city": "Gondia", "iata": "GDB", "icao": "VAGD", "lat": 21.5125, "lon": 80.2800, "country": "India"},
-    "Coimbatore (VOCB)": {"city": "Coimbatore", "iata": "CJB", "icao": "VOCB", "lat": 11.0299, "lon": 77.0434, "country": "India"},
-    "Visakhapatnam (VOVZ)": {"city": "Visakhapatnam", "iata": "VTZ", "icao": "VOVZ", "lat": 17.7212, "lon": 83.2245, "country": "India"},
-    "Mangalore (VOML)": {"city": "Mangalore", "iata": "IXE", "icao": "VOML", "lat": 12.9613, "lon": 74.8900, "country": "India"},
-    "Thiruvananthapuram (VOTV)": {"city": "Thiruvananthapuram", "iata": "TRV", "icao": "VOTV", "lat": 8.4821, "lon": 76.9200, "country": "India"},
-    "Surat (VASU)": {"city": "Surat", "iata": "STV", "icao": "VASU", "lat": 21.1139, "lon": 72.7419, "country": "India"},
-    "Udaipur (VAUD)": {"city": "Udaipur", "iata": "UDR", "icao": "VAUD", "lat": 24.6177, "lon": 73.8961, "country": "India"},
-    "Raipur (VARP)": {"city": "Raipur", "iata": "RPR", "icao": "VARP", "lat": 21.1804, "lon": 81.7388, "country": "India"},
-    "Ranchi (VERC)": {"city": "Ranchi", "iata": "IXR", "icao": "VERC", "lat": 23.3143, "lon": 85.3217, "country": "India"},
-    "Dehradun (VIDN)": {"city": "Dehradun", "iata": "DED", "icao": "VIDN", "lat": 30.1897, "lon": 78.1803, "country": "India"},
-    "Bagdogra (VEBD)": {"city": "Bagdogra", "iata": "IXB", "icao": "VEBD", "lat": 26.6812, "lon": 88.3286, "country": "India"},
-    "Port Blair (VOPB)": {"city": "Port Blair", "iata": "IXZ", "icao": "VOPB", "lat": 11.6410, "lon": 92.7297, "country": "India"},
-    
-    # Major Global Hubs
-    "Dubai (OMDB)": {"city": "Dubai", "iata": "DXB", "icao": "OMDB", "lat": 25.2528, "lon": 55.3644, "country": "UAE"},
-    "Doha (OTHH)": {"city": "Doha", "iata": "DOH", "icao": "OTHH", "lat": 25.2731, "lon": 51.6081, "country": "Qatar"},
-    "Abu Dhabi (OMAA)": {"city": "Abu Dhabi", "iata": "AUH", "icao": "OMAA", "lat": 24.4330, "lon": 54.6511, "country": "UAE"},
-    "London Heathrow (EGLL)": {"city": "London", "iata": "LHR", "icao": "EGLL", "lat": 51.4700, "lon": -0.4543, "country": "United Kingdom"},
-    "London Gatwick (EGKK)": {"city": "London", "iata": "LGW", "icao": "EGKK", "lat": 51.1537, "lon": -0.1821, "country": "United Kingdom"},
-    "Frankfurt (EDDF)": {"city": "Frankfurt", "iata": "FRA", "icao": "EDDF", "lat": 50.0379, "lon": 8.5622, "country": "Germany"},
-    "Paris CDG (LFPG)": {"city": "Paris", "iata": "CDG", "icao": "LFPG", "lat": 49.0097, "lon": 2.5479, "country": "France"},
-    "Amsterdam (EHAM)": {"city": "Amsterdam", "iata": "AMS", "icao": "EHAM", "lat": 52.3105, "lon": 4.7683, "country": "Netherlands"},
-    "Singapore (WSSS)": {"city": "Singapore", "iata": "SIN", "icao": "WSSS", "lat": 1.3644, "lon": 103.9915, "country": "Singapore"},
-    "Tokyo Haneda (RJTT)": {"city": "Tokyo", "iata": "HND", "icao": "RJTT", "lat": 35.5494, "lon": 139.7798, "country": "Japan"},
-    "Tokyo Narita (RJAA)": {"city": "Tokyo", "iata": "NRT", "icao": "RJAA", "lat": 35.7720, "lon": 140.3929, "country": "Japan"},
-    "Bangkok (VTBS)": {"city": "Bangkok", "iata": "BKK", "icao": "VTBS", "lat": 13.6900, "lon": 100.7501, "country": "Thailand"},
-    "Hong Kong (VHHH)": {"city": "Hong Kong", "iata": "HKG", "icao": "VHHH", "lat": 22.3080, "lon": 113.9185, "country": "Hong Kong"},
-    "Kuala Lumpur (WMKK)": {"city": "Kuala Lumpur", "iata": "KUL", "icao": "WMKK", "lat": 2.7456, "lon": 101.7099, "country": "Malaysia"},
-    "Sydney (YSSY)": {"city": "Sydney", "iata": "SYD", "icao": "YSSY", "lat": -33.9399, "lon": 151.1753, "country": "Australia"},
-    "Melbourne (YMML)": {"city": "Melbourne", "iata": "MEL", "icao": "YMML", "lat": -37.6690, "lon": 144.8410, "country": "Australia"},
-    "New York JFK (KJFK)": {"city": "New York", "iata": "JFK", "icao": "KJFK", "lat": 40.6413, "lon": -73.7781, "country": "USA"},
-    "Los Angeles (KLAX)": {"city": "Los Angeles", "iata": "LAX", "icao": "KLAX", "lat": 33.9416, "lon": -118.4085, "country": "USA"},
-    "Chicago O'Hare (KORD)": {"city": "Chicago", "iata": "ORD", "icao": "KORD", "lat": 41.9742, "lon": -87.9073, "country": "USA"},
-    "San Francisco (KSFO)": {"city": "San Francisco", "iata": "SFO", "icao": "KSFO", "lat": 37.6188, "lon": -122.3750, "country": "USA"},
-    "Toronto (CYYZ)": {"city": "Toronto", "iata": "YYZ", "icao": "CYYZ", "lat": 43.6777, "lon": -79.6248, "country": "Canada"},
-    "Istanbul (LTFM)": {"city": "Istanbul", "iata": "IST", "icao": "LTFM", "lat": 41.2753, "lon": 28.7519, "country": "Turkey"},
-    "Zurich (LSZH)": {"city": "Zurich", "iata": "ZRH", "icao": "LSZH", "lat": 47.4582, "lon": 8.5555, "country": "Switzerland"},
+# ============================================================
+# HIERARCHICAL GLOBAL AIRSPACE & GEOCODING KNOWLEDGE BASE
+# Pattern:
+#   1. Location, City, State, Country (for specific locations)
+#   2. City, State, Country (for cities)
+#   3. State, Country (for states/provinces)
+#   4. Country (for countries)
+# ============================================================
+
+HIERARCHICAL_LOCATIONS = {
+    # --- 1. SPECIFIC LOCATIONS (location, city, state, country) ---
+    "Electronic City, Bangalore, Karnataka, India": {"lat": 12.8452, "lon": 77.6602},
+    "Electronic City Phase 1, Bangalore, Karnataka, India": {"lat": 12.8450, "lon": 77.6630},
+    "Electronic City Phase 2, Bangalore, Karnataka, India": {"lat": 12.8480, "lon": 77.6800},
+    "Electra Street, Abu Dhabi, Abu Dhabi, UAE": {"lat": 24.4925, "lon": 54.3688},
+    "Electric Avenue, London, England, United Kingdom": {"lat": 51.4627, "lon": -0.1147},
+    "Whitefield, Bangalore, Karnataka, India": {"lat": 12.9698, "lon": 77.7500},
+    "Koramangala, Bangalore, Karnataka, India": {"lat": 12.9352, "lon": 77.6245},
+    "Indiranagar, Bangalore, Karnataka, India": {"lat": 12.9719, "lon": 77.6412},
+    "HSR Layout, Bangalore, Karnataka, India": {"lat": 12.9121, "lon": 77.6446},
+    "Manyata Tech Park, Bangalore, Karnataka, India": {"lat": 13.0475, "lon": 77.6200},
+    "Kempegowda Airport (BLR), Bangalore, Karnataka, India": {"lat": 13.1979, "lon": 77.7063},
+    "BKC (Bandra Kurla Complex), Mumbai, Maharashtra, India": {"lat": 19.0657, "lon": 72.8687},
+    "Nariman Point, Mumbai, Maharashtra, India": {"lat": 18.9256, "lon": 72.8242},
+    "Andheri, Mumbai, Maharashtra, India": {"lat": 19.1136, "lon": 72.8697},
+    "Chhatrapati Shivaji Maharaj Airport (BOM), Mumbai, Maharashtra, India": {"lat": 19.0886, "lon": 72.8679},
+    "Cyber City, Gurugram, Haryana, India": {"lat": 28.4950, "lon": 77.0895},
+    "Connaught Place, New Delhi, Delhi, India": {"lat": 28.6315, "lon": 77.2167},
+    "Aerocity, New Delhi, Delhi, India": {"lat": 28.5503, "lon": 77.1215},
+    "Indira Gandhi Airport (DEL), New Delhi, Delhi, India": {"lat": 28.5665, "lon": 77.1031},
+    "Noida Sector 62, Noida, Uttar Pradesh, India": {"lat": 28.6280, "lon": 77.3649},
+    "Hinjawadi, Pune, Maharashtra, India": {"lat": 18.5913, "lon": 73.7389},
+    "Magarpatta, Pune, Maharashtra, India": {"lat": 18.5158, "lon": 73.9272},
+    "Pune Airport (PNQ), Pune, Maharashtra, India": {"lat": 18.5822, "lon": 73.9197},
+    "HITEC City, Hyderabad, Telangana, India": {"lat": 17.4435, "lon": 78.3772},
+    "Gachibowli, Hyderabad, Telangana, India": {"lat": 17.4401, "lon": 78.3489},
+    "Rajiv Gandhi Airport (HYD), Hyderabad, Telangana, India": {"lat": 17.2403, "lon": 78.4294},
+    "MIHAN SEZ, Nagpur, Maharashtra, India": {"lat": 21.0450, "lon": 79.0300},
+    "Dr. Babasaheb Ambedkar Airport (NAG), Nagpur, Maharashtra, India": {"lat": 21.0922, "lon": 79.0472},
+    "Dharampeth, Nagpur, Maharashtra, India": {"lat": 21.1438, "lon": 79.0645},
+    "Sitabuldi, Nagpur, Maharashtra, India": {"lat": 21.1458, "lon": 79.0882},
+    "OMR (IT Corridor), Chennai, Tamil Nadu, India": {"lat": 12.8996, "lon": 80.2209},
+    "Chennai Airport (MAA), Chennai, Tamil Nadu, India": {"lat": 12.9941, "lon": 80.1709},
+    "Salt Lake Sector V, Kolkata, West Bengal, India": {"lat": 22.5804, "lon": 88.4378},
+    "Rajarhat New Town, Kolkata, West Bengal, India": {"lat": 22.5867, "lon": 88.4754},
+    "Netaji Subhash Chandra Bose Airport (CCU), Kolkata, West Bengal, India": {"lat": 22.6547, "lon": 88.4467},
+    "Dabolim Airport (GOI), Goa, Goa, India": {"lat": 15.3808, "lon": 73.8314},
+    "Mopa Manohar Airport (GOX), Goa, Goa, India": {"lat": 15.7663, "lon": 73.8647},
+    "Calangute, Goa, Goa, India": {"lat": 15.5439, "lon": 73.7553},
+    "Panaji, Goa, Goa, India": {"lat": 15.4909, "lon": 73.8278},
+    "Japan National Stadium, Shinjuku, Tokyo, Japan": {"lat": 35.6778, "lon": 139.7145},
+    "Japan Standard Time Meridian, Akashi, Hyogo, Japan": {"lat": 34.6493, "lon": 134.9984},
+    "Shinjuku, Tokyo, Kanto, Japan": {"lat": 35.6938, "lon": 139.7034},
+    "Shibuya, Tokyo, Kanto, Japan": {"lat": 35.6580, "lon": 139.7016},
+    "Akihabara, Tokyo, Kanto, Japan": {"lat": 35.6983, "lon": 139.7731},
+    "Ginza, Tokyo, Kanto, Japan": {"lat": 35.6719, "lon": 139.7648},
+    "Tokyo Haneda Airport (HND), Tokyo, Kanto, Japan": {"lat": 35.5494, "lon": 139.7798},
+    "Tokyo Narita Airport (NRT), Tokyo, Kanto, Japan": {"lat": 35.7720, "lon": 140.3929},
+    "Canary Wharf, London, England, United Kingdom": {"lat": 51.5054, "lon": -0.0235},
+    "London Heathrow Airport (LHR), London, England, United Kingdom": {"lat": 51.4700, "lon": -0.4543},
+    "London Gatwick Airport (LGW), London, England, United Kingdom": {"lat": 51.1537, "lon": -0.1821},
+    "Manhattan, New York, New York, USA": {"lat": 40.7831, "lon": -73.9712},
+    "JFK Airport (JFK), New York, New York, USA": {"lat": 40.6413, "lon": -73.7781},
+    "Silicon Valley, San Jose, California, USA": {"lat": 37.3382, "lon": -121.8863},
+    "Downtown, Dubai, Dubai, UAE": {"lat": 25.1972, "lon": 55.2744},
+    "Dubai Airport (DXB), Dubai, Dubai, UAE": {"lat": 25.2528, "lon": 55.3644},
+    "Marina Bay, Singapore, Central, Singapore": {"lat": 1.2847, "lon": 103.8610},
+    "Changi Airport (SIN), Singapore, Central, Singapore": {"lat": 1.3644, "lon": 103.9915},
+
+    # --- 2. CITIES (city, state, country) ---
+    "Bangalore, Karnataka, India": {"lat": 12.9716, "lon": 77.5946},
+    "Nagpur, Maharashtra, India": {"lat": 21.1458, "lon": 79.0882},
+    "Mumbai, Maharashtra, India": {"lat": 19.0760, "lon": 72.8777},
+    "Delhi, Delhi, India": {"lat": 28.7041, "lon": 77.1025},
+    "Hyderabad, Telangana, India": {"lat": 17.3850, "lon": 78.4867},
+    "Chennai, Tamil Nadu, India": {"lat": 13.0827, "lon": 80.2707},
+    "Kolkata, West Bengal, India": {"lat": 22.5726, "lon": 88.3639},
+    "Pune, Maharashtra, India": {"lat": 18.5204, "lon": 73.8567},
+    "Ahmedabad, Gujarat, India": {"lat": 23.0225, "lon": 72.5714},
+    "Jaipur, Rajasthan, India": {"lat": 26.9124, "lon": 75.7873},
+    "Lucknow, Uttar Pradesh, India": {"lat": 26.8467, "lon": 80.9462},
+    "Varanasi, Uttar Pradesh, India": {"lat": 25.3176, "lon": 82.9739},
+    "Kochi, Kerala, India": {"lat": 9.9312, "lon": 76.2673},
+    "Goa, Goa, India": {"lat": 15.2993, "lon": 74.1240},
+    "Chandigarh, Punjab, India": {"lat": 30.7333, "lon": 76.7794},
+    "Amritsar, Punjab, India": {"lat": 31.6340, "lon": 74.8723},
+    "Srinagar, Jammu and Kashmir, India": {"lat": 34.0837, "lon": 74.7973},
+    "Guwahati, Assam, India": {"lat": 26.1445, "lon": 91.7362},
+    "Bhubaneswar, Odisha, India": {"lat": 20.2961, "lon": 85.8245},
+    "Indore, Madhya Pradesh, India": {"lat": 22.7196, "lon": 75.8577},
+    "Bhopal, Madhya Pradesh, India": {"lat": 23.2599, "lon": 77.4126},
+    "Patna, Bihar, India": {"lat": 25.5941, "lon": 85.1376},
+    "Gondia, Maharashtra, India": {"lat": 21.4624, "lon": 80.1961},
+    "Coimbatore, Tamil Nadu, India": {"lat": 11.0168, "lon": 76.9558},
+    "Visakhapatnam, Andhra Pradesh, India": {"lat": 17.6868, "lon": 83.2185},
+    "Mangalore, Karnataka, India": {"lat": 12.9141, "lon": 74.8560},
+    "Thiruvananthapuram, Kerala, India": {"lat": 8.5241, "lon": 76.9366},
+    "Surat, Gujarat, India": {"lat": 21.1702, "lon": 72.8311},
+    "Vadodara, Gujarat, India": {"lat": 22.3072, "lon": 73.1812},
+    "Udaipur, Rajasthan, India": {"lat": 24.5854, "lon": 73.7125},
+    "Raipur, Chhattisgarh, India": {"lat": 21.2514, "lon": 81.6296},
+    "Ranchi, Jharkhand, India": {"lat": 23.3441, "lon": 85.3096},
+    "Dehradun, Uttarakhand, India": {"lat": 30.3165, "lon": 78.0322},
+    "Bagdogra, West Bengal, India": {"lat": 26.6976, "lon": 88.3188},
+    "Port Blair, Andaman and Nicobar Islands, India": {"lat": 11.6234, "lon": 92.7265},
+    "Tokyo, Kanto, Japan": {"lat": 35.6762, "lon": 139.6503},
+    "Osaka, Kansai, Japan": {"lat": 34.6937, "lon": 135.5023},
+    "Kyoto, Kansai, Japan": {"lat": 35.0116, "lon": 135.7681},
+    "Sapporo, Hokkaido, Japan": {"lat": 43.0618, "lon": 141.3545},
+    "Fukuoka, Kyushu, Japan": {"lat": 33.5904, "lon": 130.4017},
+    "Nagoya, Chubu, Japan": {"lat": 35.1815, "lon": 136.9066},
+    "London, England, United Kingdom": {"lat": 51.5074, "lon": -0.1278},
+    "Manchester, England, United Kingdom": {"lat": 53.4808, "lon": -2.2426},
+    "Edinburgh, Scotland, United Kingdom": {"lat": 55.9533, "lon": -3.1883},
+    "Paris, Île-de-France, France": {"lat": 48.8566, "lon": 2.3522},
+    "Nice, Provence-Alpes-Côte d'Azur, France": {"lat": 43.7102, "lon": 7.2620},
+    "Frankfurt, Hesse, Germany": {"lat": 50.1109, "lon": 8.6821},
+    "Munich, Bavaria, Germany": {"lat": 48.1351, "lon": 11.5820},
+    "Berlin, Berlin, Germany": {"lat": 52.5200, "lon": 13.4050},
+    "Dubai, Dubai, UAE": {"lat": 25.2048, "lon": 55.2708},
+    "Abu Dhabi, Abu Dhabi, UAE": {"lat": 24.4539, "lon": 54.3773},
+    "Doha, Doha, Qatar": {"lat": 25.2854, "lon": 51.5310},
+    "Singapore, Central, Singapore": {"lat": 1.3521, "lon": 103.8198},
+    "Bangkok, Central, Thailand": {"lat": 13.7563, "lon": 100.5018},
+    "Hong Kong, Hong Kong Island, Hong Kong": {"lat": 22.3193, "lon": 114.1694},
+    "Kuala Lumpur, Federal Territory, Malaysia": {"lat": 3.1390, "lon": 101.6869},
+    "Sydney, New South Wales, Australia": {"lat": -33.8688, "lon": 151.2093},
+    "Melbourne, Victoria, Australia": {"lat": -37.8136, "lon": 144.9631},
+    "Brisbane, Queensland, Australia": {"lat": -27.4698, "lon": 153.0251},
+    "Perth, Western Australia, Australia": {"lat": -31.9505, "lon": 115.8605},
+    "New York, New York, USA": {"lat": 40.7128, "lon": -74.0060},
+    "Los Angeles, California, USA": {"lat": 33.9416, "lon": -118.4085},
+    "Chicago, Illinois, USA": {"lat": 41.8781, "lon": -87.6298},
+    "San Francisco, California, USA": {"lat": 37.7749, "lon": -122.4194},
+    "Seattle, Washington, USA": {"lat": 47.6062, "lon": -122.3321},
+    "Miami, Florida, USA": {"lat": 25.7617, "lon": -80.1918},
+    "Dallas, Texas, USA": {"lat": 32.7767, "lon": -96.7970},
+    "Toronto, Ontario, Canada": {"lat": 43.6532, "lon": -79.3832},
+    "Vancouver, British Columbia, Canada": {"lat": 49.2827, "lon": -123.1207},
+    "Amsterdam, North Holland, Netherlands": {"lat": 52.3676, "lon": 4.9041},
+    "Zurich, Zurich, Switzerland": {"lat": 47.3769, "lon": 8.5417},
+    "Istanbul, Marmara, Turkey": {"lat": 41.0082, "lon": 28.9784},
+    "Rome, Lazio, Italy": {"lat": 41.9028, "lon": 12.4964},
+    "Madrid, Community of Madrid, Spain": {"lat": 40.4168, "lon": -3.7038},
+
+    # --- 3. STATES / PROVINCES (state, country) ---
+    "Karnataka, India": {"lat": 15.3173, "lon": 75.7139},
+    "Maharashtra, India": {"lat": 19.7515, "lon": 75.7139},
+    "Delhi, India": {"lat": 28.7041, "lon": 77.1025},
+    "Tamil Nadu, India": {"lat": 11.1271, "lon": 78.6569},
+    "Telangana, India": {"lat": 18.1124, "lon": 79.0193},
+    "Gujarat, India": {"lat": 22.2587, "lon": 71.1924},
+    "Uttar Pradesh, India": {"lat": 26.8467, "lon": 80.9462},
+    "Rajasthan, India": {"lat": 27.0238, "lon": 74.2179},
+    "West Bengal, India": {"lat": 22.9868, "lon": 87.8550},
+    "Kerala, India": {"lat": 10.8505, "lon": 76.2711},
+    "Goa, India": {"lat": 15.2993, "lon": 74.1240},
+    "Punjab, India": {"lat": 31.1471, "lon": 75.3412},
+    "Haryana, India": {"lat": 29.0588, "lon": 76.0856},
+    "Madhya Pradesh, India": {"lat": 22.9734, "lon": 78.6569},
+    "Bihar, India": {"lat": 25.0961, "lon": 85.3131},
+    "Odisha, India": {"lat": 20.9517, "lon": 85.0985},
+    "Assam, India": {"lat": 26.2006, "lon": 92.9376},
+    "Andhra Pradesh, India": {"lat": 15.9129, "lon": 79.7400},
+    "Kanto, Japan": {"lat": 35.6762, "lon": 139.6503},
+    "Kansai, Japan": {"lat": 34.6937, "lon": 135.5023},
+    "Hokkaido, Japan": {"lat": 43.0618, "lon": 141.3545},
+    "Kyushu, Japan": {"lat": 33.5904, "lon": 130.4017},
+    "California, USA": {"lat": 36.7783, "lon": -119.4179},
+    "New York, USA": {"lat": 40.7128, "lon": -74.0060},
+    "Texas, USA": {"lat": 31.9686, "lon": -99.9018},
+    "Florida, USA": {"lat": 27.6648, "lon": -81.5158},
+    "England, United Kingdom": {"lat": 52.3555, "lon": -1.1743},
+    "Scotland, United Kingdom": {"lat": 56.4907, "lon": -4.2026},
+    "Bavaria, Germany": {"lat": 48.7904, "lon": 11.4979},
+    "New South Wales, Australia": {"lat": -31.8402, "lon": 145.6128},
+    "Victoria, Australia": {"lat": -37.4713, "lon": 144.7852},
+    "Ontario, Canada": {"lat": 51.2538, "lon": -85.3232},
+
+    # --- 4. COUNTRIES (country) ---
+    "Japan": {"lat": 36.2048, "lon": 138.2529},
+    "India": {"lat": 20.5937, "lon": 78.9629},
+    "United States": {"lat": 37.0902, "lon": -95.7129},
+    "United Kingdom": {"lat": 55.3781, "lon": -3.4360},
+    "United Arab Emirates": {"lat": 23.4241, "lon": 53.8478},
+    "Germany": {"lat": 51.1657, "lon": 10.4515},
+    "France": {"lat": 46.2276, "lon": 2.2137},
+    "Singapore": {"lat": 1.3521, "lon": 103.8198},
+    "Australia": {"lat": -25.2744, "lon": 133.7751},
+    "Canada": {"lat": 56.1304, "lon": -106.3468},
+    "Qatar": {"lat": 25.3548, "lon": 51.1839},
+    "Switzerland": {"lat": 46.8182, "lon": 8.2275},
+    "Thailand": {"lat": 15.8700, "lon": 100.9925},
+    "Netherlands": {"lat": 52.1326, "lon": 5.2913},
+    "Malaysia": {"lat": 4.2105, "lon": 101.9758},
+    "Italy": {"lat": 41.8719, "lon": 12.5674},
+    "Spain": {"lat": 40.4637, "lon": -3.7492},
 }
 
-CITIES = {k: (v["lat"], v["lon"]) for k, v in GLOBAL_LOCATIONS.items()}
+# Backward-compatibility hubs map
+CITIES = {
+    "Nagpur (VANP)": (21.0922, 79.0472),
+    "Bengaluru (VOBL)": (13.1979, 77.7063),
+    "Mumbai (VABB)": (19.0886, 72.8679),
+    "Delhi (VIDP)": (28.5665, 77.1031),
+    "Hyderabad (VOHS)": (17.2403, 78.4294),
+    "Chennai (VOMM)": (12.9941, 80.1709),
+    "Kolkata (VECC)": (22.6547, 88.4467),
+    "Pune (VAPO)": (18.5822, 73.9197),
+    "Ahmedabad (VAAH)": (23.0772, 72.6347),
+    "Kochi (VOCI)": (10.1520, 76.3920),
+    "Goa Dabolim (VOGO)": (15.3808, 73.8314),
+    "Dubai (OMDB)": (25.2528, 55.3644),
+    "London Heathrow (EGLL)": (51.4700, -0.4543),
+    "Frankfurt (EDDF)": (50.0379, 8.5622),
+    "Singapore (WSSS)": (1.3644, 103.9915),
+    "Tokyo Haneda (RJTT)": (35.5494, 139.7798),
+    "New York JFK (KJFK)": (40.6413, -73.7781),
+}
+
+
+def format_hierarchy(address: dict, display_name: str = "") -> str:
+    """
+    Formats OpenStreetMap address dict into:
+    - location, city, state, country (for locations)
+    - city, state, country (for city)
+    - state, country (for state)
+    - country (for country)
+    """
+    loc = (
+        address.get("suburb") or 
+        address.get("neighbourhood") or 
+        address.get("quarter") or 
+        address.get("amenity") or 
+        address.get("commercial") or
+        address.get("industrial") or
+        address.get("residential") or
+        address.get("road")
+    )
+    city = (
+        address.get("city") or 
+        address.get("town") or 
+        address.get("municipality") or 
+        address.get("county") or 
+        address.get("city_district")
+    )
+    state = address.get("state") or address.get("province") or address.get("region")
+    country = address.get("country")
+
+    parts = []
+    if loc:
+        parts.append(loc)
+    if city and (not parts or city.lower() != parts[-1].lower()):
+        parts.append(city)
+    if state and (not parts or state.lower() != parts[-1].lower()):
+        parts.append(state)
+    if country and (not parts or country.lower() != parts[-1].lower()):
+        parts.append(country)
+
+    if parts:
+        return ", ".join(parts)
+    return display_name or "Custom Airspace Sector"
+
+
+def live_geocode_location(query: str) -> Optional[Tuple[str, float, float]]:
+    """
+    Geocodes arbitrary user search queries into a standardized hierarchical address.
+    """
+    q = (query or "").strip()
+    if not q:
+        return None
+    try:
+        headers = {"User-Agent": "AeroGuard-Avionics/2.0 (contact: info@aeroguard.com)"}
+        url = "https://nominatim.openstreetmap.org/search"
+        resp = requests.get(url, params={"q": q, "format": "json", "limit": 1, "addressdetails": 1}, headers=headers, timeout=3.5)
+        if resp.status_code == 200:
+            data = resp.json()
+            if data and len(data) > 0:
+                first = data[0]
+                lat = float(first["lat"])
+                lon = float(first["lon"])
+                addr = first.get("address", {})
+                formatted = format_hierarchy(addr, first.get("display_name", ""))
+                return (formatted, lat, lon)
+    except Exception:
+        pass
+    return None
 
 
 def search_airspace_location(query: str) -> Optional[Tuple[str, float, float]]:
     """
-    Resolves location string (city name, IATA, ICAO code, or comma-separated 'lat, lon')
-    into (displayName, latitude, longitude).
+    Resolves a search query (hierarchical match, IATA/ICAO code, or comma-separated lat,lon).
     """
     q = (query or "").strip()
     if not q:
@@ -141,23 +361,14 @@ def search_airspace_location(query: str) -> Optional[Tuple[str, float, float]]:
                 pass
 
     q_lower = q.lower()
-    
-    # 1. Exact match on IATA or ICAO code
-    for name, data in GLOBAL_LOCATIONS.items():
-        if data["iata"].lower() == q_lower or data["icao"].lower() == q_lower:
-            return (name, data["lat"], data["lon"])
-            
-    # 2. Match city name
-    for name, data in GLOBAL_LOCATIONS.items():
-        if data["city"].lower() == q_lower:
+
+    # Match in HIERARCHICAL_LOCATIONS
+    for name, data in HIERARCHICAL_LOCATIONS.items():
+        if name.lower().startswith(q_lower) or q_lower in name.lower():
             return (name, data["lat"], data["lon"])
 
-    # 3. Substring match
-    for name, data in GLOBAL_LOCATIONS.items():
-        if q_lower in name.lower() or q_lower in data["city"].lower() or q_lower in data["country"].lower():
-            return (name, data["lat"], data["lon"])
-
-    return None
+    # Fallback to live geocoder
+    return live_geocode_location(q)
 
 DESTINATION_AIRPORTS = {
     "BOM": {"name": "Chhatrapati Shivaji Maharaj (BOM)", "city": "Mumbai", "iata": "BOM", "icao": "VABB", "latitude": 19.0886, "longitude": 72.8679, "elevation": 39},
@@ -2410,7 +2621,7 @@ def main():
                     <span>{status_text}</span>
                 </div>
                 <div class="foc-pill">
-                    <span>SECTOR: {st.session_state.location_source.split()[0].upper()}</span>
+                    <span>SECTOR: {st.session_state.location_source.split(",")[0].strip().upper()}</span>
                 </div>
                 <div class="foc-pill">
                     <span>ICAO GADSS DFDR</span>
@@ -2457,37 +2668,78 @@ def main():
                 st.rerun()
 
         elif target_mode == "🔍 Search Location":
-            search_query = st.text_input(
-                "Search City / Airport",
-                placeholder="e.g. Goa, Tokyo, Paris, HYD, DXB...",
-                key="sidebar_city_search_input"
+            st.caption("Predictive Airspace Lookup (Location / City / State / Country):")
+            if "custom_geocoded_locations" not in st.session_state:
+                st.session_state.custom_geocoded_locations = {}
+
+            all_loc_options = list(HIERARCHICAL_LOCATIONS.keys()) + [
+                k for k in st.session_state.custom_geocoded_locations.keys() if k not in HIERARCHICAL_LOCATIONS
+            ]
+            current_choice = st.session_state.get("location_source")
+            sel_idx = all_loc_options.index(current_choice) if current_choice in all_loc_options else None
+
+            selected_hierarchical = st.selectbox(
+                "Type Location (e.g. Jap, elect, Bangalore)",
+                options=all_loc_options,
+                index=sel_idx,
+                placeholder="Type to search (e.g. Jap, elect, Bangalore, London)...",
+                key="sidebar_hierarchical_dropdown"
             )
-            col_search_btn, col_search_reset = st.columns([2, 1])
-            with col_search_btn:
-                if st.button("🔍 Interrogate", use_container_width=True, key="sidebar_execute_search_btn"):
-                    res = search_airspace_location(search_query)
-                    if res:
-                        st.session_state.location_source = res[0]
-                        st.session_state.location_lat = res[1]
-                        st.session_state.location_lon = res[2]
-                        st.session_state.flights = discover_flights(
-                            load_api(),
-                            res[1],
-                            res[2],
-                            st.session_state.get("sidebar_radius_slider", 200),
-                            hub_name=res[0],
-                        )
-                        if is_active:
-                            stop_monitoring()
-                        st.rerun()
-                    else:
-                        st.error("Location not matched. Try city name, IATA code (e.g. GOI), or 'lat, lon'.")
-            with col_search_reset:
-                if st.button("Reset", use_container_width=True, key="sidebar_reset_search_btn"):
-                    st.session_state.location_source = "Nagpur (VANP)"
-                    st.session_state.location_lat = CITIES["Nagpur (VANP)"][0]
-                    st.session_state.location_lon = CITIES["Nagpur (VANP)"][1]
+
+            if selected_hierarchical and selected_hierarchical != st.session_state.get("location_source"):
+                coords = HIERARCHICAL_LOCATIONS.get(
+                    selected_hierarchical,
+                    st.session_state.custom_geocoded_locations.get(selected_hierarchical)
+                )
+                if coords:
+                    st.session_state.location_source = selected_hierarchical
+                    st.session_state.location_lat = coords["lat"]
+                    st.session_state.location_lon = coords["lon"]
+                    st.session_state.flights = discover_flights(
+                        load_api(),
+                        coords["lat"],
+                        coords["lon"],
+                        st.session_state.get("sidebar_radius_slider", 200),
+                        hub_name=selected_hierarchical,
+                    )
+                    if is_active:
+                        stop_monitoring()
                     st.rerun()
+
+            with st.expander("🌐 Custom Landmark / Street Search", expanded=False):
+                geo_query = st.text_input(
+                    "Search any address / landmark worldwide",
+                    placeholder="e.g. Electronic City Phase 2, White House, MG Road...",
+                    key="sidebar_live_custom_geo_input"
+                )
+                col_geo_btn, col_geo_reset = st.columns([2, 1])
+                with col_geo_btn:
+                    if st.button("Resolve & Interrogate", use_container_width=True, key="sidebar_live_geo_btn"):
+                        geo_res = live_geocode_location(geo_query)
+                        if geo_res:
+                            formatted_loc, g_lat, g_lon = geo_res
+                            st.session_state.custom_geocoded_locations[formatted_loc] = {"lat": g_lat, "lon": g_lon}
+                            st.session_state.location_source = formatted_loc
+                            st.session_state.location_lat = g_lat
+                            st.session_state.location_lon = g_lon
+                            st.session_state.flights = discover_flights(
+                                load_api(),
+                                g_lat,
+                                g_lon,
+                                st.session_state.get("sidebar_radius_slider", 200),
+                                hub_name=formatted_loc,
+                            )
+                            if is_active:
+                                stop_monitoring()
+                            st.rerun()
+                        else:
+                            st.warning("Could not geocode custom query. Please try with city name or postal code.")
+                with col_geo_reset:
+                    if st.button("Reset", use_container_width=True, key="sidebar_reset_search_btn"):
+                        st.session_state.location_source = "Nagpur (VANP)"
+                        st.session_state.location_lat = CITIES["Nagpur (VANP)"][0]
+                        st.session_state.location_lon = CITIES["Nagpur (VANP)"][1]
+                        st.rerun()
 
         else: # "🌐 Custom Coordinates"
             col_lat, col_lon = st.columns(2)
