@@ -2724,12 +2724,30 @@ def main():
             st.markdown(f"### 📡 Active Airborne Targets Detected Near {st.session_state.location_source}")
             st.info("👈 **Action Required:** Select your target aircraft from the sidebar on the left and click **▶ Start** to initiate telemetry monitoring.")
             
-            df_preview = pd.DataFrame(flights)[["callsign", "icao24", "airline", "altitude", "velocity", "heading", "distance_km"]]
-            df_preview["altitude"] = df_preview["altitude"].apply(lambda a: f"{a * 3.28084:,.0f} ft")
-            df_preview["velocity"] = df_preview["velocity"].apply(lambda v: f"{v * 1.94384:.0f} kts")
-            df_preview["heading"] = df_preview["heading"].apply(lambda h: f"{h:.0f}°")
-            df_preview["distance_km"] = df_preview["distance_km"].apply(lambda d: f"{d:.1f} km")
-            df_preview.columns = ["Callsign", "Mode-S Hex", "Airline / Operator", "Altitude", "Ground Speed", "Heading", "Radial Distance"]
+            df_raw = pd.DataFrame(flights)
+            if "airline" not in df_raw.columns:
+                df_raw["airline"] = "Commercial Air Carrier"
+            cols_to_use = [c for c in ["callsign", "icao24", "airline", "altitude", "velocity", "heading", "distance_km"] if c in df_raw.columns]
+            df_preview = df_raw[cols_to_use].copy()
+            if "altitude" in df_preview.columns:
+                df_preview["altitude"] = df_preview["altitude"].apply(lambda a: f"{float(a) * 3.28084:,.0f} ft" if pd.notna(a) else "N/A")
+            if "velocity" in df_preview.columns:
+                df_preview["velocity"] = df_preview["velocity"].apply(lambda v: f"{float(v) * 1.94384:.0f} kts" if pd.notna(v) else "N/A")
+            if "heading" in df_preview.columns:
+                df_preview["heading"] = df_preview["heading"].apply(lambda h: f"{float(h):.0f}°" if pd.notna(h) else "N/A")
+            if "distance_km" in df_preview.columns:
+                df_preview["distance_km"] = df_preview["distance_km"].apply(lambda d: f"{float(d):.1f} km" if pd.notna(d) else "N/A")
+            
+            rename_map = {
+                "callsign": "Callsign",
+                "icao24": "Mode-S Hex",
+                "airline": "Airline / Operator",
+                "altitude": "Altitude",
+                "velocity": "Ground Speed",
+                "heading": "Heading",
+                "distance_km": "Radial Distance"
+            }
+            df_preview = df_preview.rename(columns=rename_map)
             st.dataframe(df_preview, use_container_width=True, hide_index=True)
         else:
             st.info("👈 Open the sidebar on the left, select a radar hub, and click **Scan Horizon for Aircraft** to begin.")
