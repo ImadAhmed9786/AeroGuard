@@ -7,6 +7,7 @@ import io
 import math
 import random
 import struct
+import textwrap
 import time
 import wave
 from datetime import datetime, timezone, timedelta
@@ -2033,7 +2034,7 @@ def render_incident_dossier(
     hdg = latest.get("heading", 0.0) if latest else 0.0
 
     st.markdown(
-        f"""
+        textwrap.dedent(f"""
         <div class="foc-dossier-box">
             <div class="foc-dossier-header">
                 <div>
@@ -2123,7 +2124,7 @@ def render_incident_dossier(
                 <div style="margin-top: 4px; font-size: 10px; color: #6B7280;">Compliant with ICAO Doc 10054 (Autonomous Distress Tracking) & Annex 13 Aircraft Accident Investigation protocol.</div>
             </div>
         </div>
-        """,
+        """).strip(),
         unsafe_allow_html=True
     )
 
