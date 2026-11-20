@@ -109,11 +109,11 @@ AIRPORTS = {
             "HYD": DESTINATION_AIRPORTS["HYD"],
         },
         "sample_flights": [
-            {"callsign": "IGO403", "icao24": "8008a1", "airline": "IndiGo Airlines", "dest_iata": "BOM", "lat_offset": 0.14, "lon_offset": -0.16, "alt": 9753.0, "vel": 226.0, "vr": 0.0, "squawk": "3321"},
-            {"callsign": "IGO436", "icao24": "8008a1", "airline": "IndiGo Airlines", "dest_iata": "BOM", "lat_offset": 0.14, "lon_offset": -0.16, "alt": 9753.0, "vel": 226.0, "vr": 0.0, "squawk": "3321"},
-            {"callsign": "AIC469", "icao24": "8005b8", "airline": "Air India", "dest_iata": "DEL", "lat_offset": 0.22, "lon_offset": 0.12, "alt": 10668.0, "vel": 238.0, "vr": -0.5, "squawk": "4210"},
-            {"callsign": "IGO6614", "icao24": "8009c4", "airline": "IndiGo Airlines", "dest_iata": "BLR", "lat_offset": -0.18, "lon_offset": 0.15, "alt": 10058.0, "vel": 230.0, "vr": 0.0, "squawk": "5144"},
-            {"callsign": "SEJ871", "icao24": "8003ef", "airline": "SpiceJet", "dest_iata": "HYD", "lat_offset": -0.26, "lon_offset": -0.11, "alt": 8840.0, "vel": 218.0, "vr": 0.2, "squawk": "2105"},
+            {"callsign": "IGO403", "icao24": "8008a1", "airline": "IndiGo Airlines", "type_code": "A20N", "dest_iata": "BOM", "lat_offset": 0.14, "lon_offset": -0.16, "alt": 9753.0, "vel": 226.0, "vr": 0.0, "squawk": "3321"},
+            {"callsign": "IGO436", "icao24": "8008a1", "airline": "IndiGo Airlines", "type_code": "A321", "dest_iata": "BOM", "lat_offset": 0.14, "lon_offset": -0.16, "alt": 9753.0, "vel": 226.0, "vr": 0.0, "squawk": "3321"},
+            {"callsign": "AIC469", "icao24": "8005b8", "airline": "Air India", "type_code": "A20N", "dest_iata": "DEL", "lat_offset": 0.22, "lon_offset": 0.12, "alt": 10668.0, "vel": 238.0, "vr": -0.5, "squawk": "4210"},
+            {"callsign": "IGO6614", "icao24": "8009c4", "airline": "IndiGo Airlines", "type_code": "AT76", "dest_iata": "BLR", "lat_offset": -0.18, "lon_offset": 0.15, "alt": 10058.0, "vel": 230.0, "vr": 0.0, "squawk": "5144"},
+            {"callsign": "SEJ871", "icao24": "8003ef", "airline": "SpiceJet", "type_code": "B738", "dest_iata": "HYD", "lat_offset": -0.26, "lon_offset": -0.11, "alt": 8840.0, "vel": 218.0, "vr": 0.2, "squawk": "2105"},
         ]
     },
     "Bengaluru (VOBL)": {
@@ -131,10 +131,10 @@ AIRPORTS = {
             "DXB": DESTINATION_AIRPORTS["DXB"],
         },
         "sample_flights": [
-            {"callsign": "AIC505", "icao24": "8005b8", "airline": "Air India", "dest_iata": "DEL", "lat_offset": 0.18, "lon_offset": 0.12, "alt": 10668.0, "vel": 234.0, "vr": -0.6, "squawk": "4215"},
-            {"callsign": "IGO2132", "icao24": "8007d2", "airline": "IndiGo Airlines", "dest_iata": "BOM", "lat_offset": 0.14, "lon_offset": -0.18, "alt": 9450.0, "vel": 224.0, "vr": 0.0, "squawk": "3310"},
-            {"callsign": "AKJ1102", "icao24": "800b33", "airline": "Akasa Air", "dest_iata": "CCU", "lat_offset": 0.25, "lon_offset": 0.28, "alt": 10972.0, "vel": 242.0, "vr": 0.0, "squawk": "6201"},
-            {"callsign": "UAE567", "icao24": "8961ad", "airline": "Emirates", "dest_iata": "DXB", "lat_offset": 0.32, "lon_offset": -0.35, "alt": 11582.0, "vel": 250.0, "vr": 0.0, "squawk": "7102"},
+            {"callsign": "AIC505", "icao24": "8005b8", "airline": "Air India", "type_code": "A20N", "dest_iata": "DEL", "lat_offset": 0.18, "lon_offset": 0.12, "alt": 10668.0, "vel": 234.0, "vr": -0.6, "squawk": "4215"},
+            {"callsign": "IGO2132", "icao24": "8007d2", "airline": "IndiGo Airlines", "type_code": "A321", "dest_iata": "BOM", "lat_offset": 0.14, "lon_offset": -0.18, "alt": 9450.0, "vel": 224.0, "vr": 0.0, "squawk": "3310"},
+            {"callsign": "AKJ1102", "icao24": "800b33", "airline": "Akasa Air", "type_code": "B38M", "dest_iata": "CCU", "lat_offset": 0.25, "lon_offset": 0.28, "alt": 10972.0, "vel": 242.0, "vr": 0.0, "squawk": "6201"},
+            {"callsign": "UAE567", "icao24": "8961ad", "airline": "Emirates", "type_code": "B77W", "dest_iata": "DXB", "lat_offset": 0.32, "lon_offset": -0.35, "alt": 11582.0, "vel": 250.0, "vr": 0.0, "squawk": "7102"},
         ]
     },
     "Mumbai (VABB)": {
@@ -152,10 +152,10 @@ AIRPORTS = {
             "DXB": DESTINATION_AIRPORTS["DXB"],
         },
         "sample_flights": [
-            {"callsign": "AIC806", "icao24": "8006ca", "airline": "Air India", "dest_iata": "DEL", "lat_offset": 0.22, "lon_offset": 0.16, "alt": 10363.0, "vel": 236.0, "vr": -0.4, "squawk": "4122"},
-            {"callsign": "IGO5302", "icao24": "8008a1", "airline": "IndiGo Airlines", "dest_iata": "BLR", "lat_offset": -0.19, "lon_offset": 0.14, "alt": 9753.0, "vel": 228.0, "vr": 0.0, "squawk": "2315"},
-            {"callsign": "BAW138", "icao24": "4009bb", "airline": "British Airways", "dest_iata": "LHR", "lat_offset": 0.35, "lon_offset": -0.32, "alt": 11277.0, "vel": 248.0, "vr": 0.0, "squawk": "5401"},
-            {"callsign": "UAE501", "icao24": "8962ff", "airline": "Emirates", "dest_iata": "DXB", "lat_offset": 0.28, "lon_offset": -0.24, "alt": 11887.0, "vel": 254.0, "vr": 0.0, "squawk": "7214"},
+            {"callsign": "AIC806", "icao24": "8006ca", "airline": "Air India", "type_code": "A20N", "dest_iata": "DEL", "lat_offset": 0.22, "lon_offset": 0.16, "alt": 10363.0, "vel": 236.0, "vr": -0.4, "squawk": "4122"},
+            {"callsign": "IGO5302", "icao24": "8008a1", "airline": "IndiGo Airlines", "type_code": "A321", "dest_iata": "BLR", "lat_offset": -0.19, "lon_offset": 0.14, "alt": 9753.0, "vel": 228.0, "vr": 0.0, "squawk": "2315"},
+            {"callsign": "BAW138", "icao24": "4009bb", "airline": "British Airways", "type_code": "B77W", "dest_iata": "LHR", "lat_offset": 0.35, "lon_offset": -0.32, "alt": 11277.0, "vel": 248.0, "vr": 0.0, "squawk": "5401"},
+            {"callsign": "UAE501", "icao24": "8962ff", "airline": "Emirates", "type_code": "A388", "dest_iata": "DXB", "lat_offset": 0.28, "lon_offset": -0.24, "alt": 11887.0, "vel": 254.0, "vr": 0.0, "squawk": "7214"},
         ]
     },
     "Delhi (VIDP)": {
@@ -173,10 +173,10 @@ AIRPORTS = {
             "SIN": DESTINATION_AIRPORTS["SIN"],
         },
         "sample_flights": [
-            {"callsign": "AIC887", "icao24": "8005b8", "airline": "Air India", "dest_iata": "BOM", "lat_offset": -0.24, "lon_offset": -0.15, "alt": 10668.0, "vel": 235.0, "vr": -0.5, "squawk": "4210"},
-            {"callsign": "VTI817", "icao24": "800a7b", "airline": "Vistara", "dest_iata": "BLR", "lat_offset": -0.28, "lon_offset": 0.11, "alt": 10972.0, "vel": 240.0, "vr": 0.0, "squawk": "3342"},
-            {"callsign": "AIC161", "icao24": "8004f1", "airline": "Air India", "dest_iata": "LHR", "lat_offset": 0.32, "lon_offset": -0.29, "alt": 11582.0, "vel": 252.0, "vr": 0.0, "squawk": "5123"},
-            {"callsign": "SIA403", "icao24": "76cd02", "airline": "Singapore Airlines", "dest_iata": "SIN", "lat_offset": -0.31, "lon_offset": 0.33, "alt": 11887.0, "vel": 255.0, "vr": 0.0, "squawk": "6704"},
+            {"callsign": "AIC887", "icao24": "8005b8", "airline": "Air India", "type_code": "A20N", "dest_iata": "BOM", "lat_offset": -0.24, "lon_offset": -0.15, "alt": 10668.0, "vel": 235.0, "vr": -0.5, "squawk": "4210"},
+            {"callsign": "VTI817", "icao24": "800a7b", "airline": "Vistara", "type_code": "A321", "dest_iata": "BLR", "lat_offset": -0.28, "lon_offset": 0.11, "alt": 10972.0, "vel": 240.0, "vr": 0.0, "squawk": "3342"},
+            {"callsign": "AIC161", "icao24": "8004f1", "airline": "Air India", "type_code": "B788", "dest_iata": "LHR", "lat_offset": 0.32, "lon_offset": -0.29, "alt": 11582.0, "vel": 252.0, "vr": 0.0, "squawk": "5123"},
+            {"callsign": "SIA403", "icao24": "76cd02", "airline": "Singapore Airlines", "type_code": "A388", "dest_iata": "SIN", "lat_offset": -0.31, "lon_offset": 0.33, "alt": 11887.0, "vel": 255.0, "vr": 0.0, "squawk": "6704"},
         ]
     },
     "Hyderabad (VOHS)": {
@@ -194,10 +194,10 @@ AIRPORTS = {
             "DXB": DESTINATION_AIRPORTS["DXB"],
         },
         "sample_flights": [
-            {"callsign": "IGO5012", "icao24": "8007a5", "airline": "IndiGo Airlines", "dest_iata": "DEL", "lat_offset": 0.21, "lon_offset": -0.09, "alt": 10363.0, "vel": 232.0, "vr": 0.0, "squawk": "3124"},
-            {"callsign": "AIC560", "icao24": "8005b8", "airline": "Air India", "dest_iata": "BOM", "lat_offset": 0.15, "lon_offset": -0.22, "alt": 9753.0, "vel": 225.0, "vr": -0.4, "squawk": "4218"},
-            {"callsign": "AXB972", "icao24": "8002cc", "airline": "Air India Express", "dest_iata": "BLR", "lat_offset": -0.23, "lon_offset": -0.08, "alt": 8534.0, "vel": 215.0, "vr": 0.0, "squawk": "2201"},
-            {"callsign": "UAE553", "icao24": "8963bb", "airline": "Emirates", "dest_iata": "DXB", "lat_offset": 0.30, "lon_offset": -0.31, "alt": 11277.0, "vel": 248.0, "vr": 0.0, "squawk": "7011"},
+            {"callsign": "IGO5012", "icao24": "8007a5", "airline": "IndiGo Airlines", "type_code": "A20N", "dest_iata": "DEL", "lat_offset": 0.21, "lon_offset": -0.09, "alt": 10363.0, "vel": 232.0, "vr": 0.0, "squawk": "3124"},
+            {"callsign": "AIC560", "icao24": "8005b8", "airline": "Air India", "type_code": "A320", "dest_iata": "BOM", "lat_offset": 0.15, "lon_offset": -0.22, "alt": 9753.0, "vel": 225.0, "vr": -0.4, "squawk": "4218"},
+            {"callsign": "AXB972", "icao24": "8002cc", "airline": "Air India Express", "type_code": "B738", "dest_iata": "BLR", "lat_offset": -0.23, "lon_offset": -0.08, "alt": 8534.0, "vel": 215.0, "vr": 0.0, "squawk": "2201"},
+            {"callsign": "UAE553", "icao24": "8963bb", "airline": "Emirates", "type_code": "B77W", "dest_iata": "DXB", "lat_offset": 0.30, "lon_offset": -0.31, "alt": 11277.0, "vel": 248.0, "vr": 0.0, "squawk": "7011"},
         ]
     },
     "Chennai (VOMM)": {
@@ -215,10 +215,10 @@ AIRPORTS = {
             "DXB": DESTINATION_AIRPORTS["DXB"],
         },
         "sample_flights": [
-            {"callsign": "IGO204", "icao24": "8008a1", "airline": "IndiGo Airlines", "dest_iata": "DEL", "lat_offset": 0.24, "lon_offset": -0.12, "alt": 10668.0, "vel": 236.0, "vr": 0.0, "squawk": "3340"},
-            {"callsign": "AIC672", "icao24": "8004a2", "airline": "Air India", "dest_iata": "BOM", "lat_offset": 0.18, "lon_offset": -0.25, "alt": 9753.0, "vel": 228.0, "vr": -0.3, "squawk": "4115"},
-            {"callsign": "SIA417", "icao24": "76cd02", "airline": "Singapore Airlines", "dest_iata": "SIN", "lat_offset": -0.22, "lon_offset": 0.35, "alt": 11582.0, "vel": 250.0, "vr": 0.0, "squawk": "6512"},
-            {"callsign": "UAE547", "icao24": "8961ad", "airline": "Emirates", "dest_iata": "DXB", "lat_offset": 0.29, "lon_offset": -0.32, "alt": 11887.0, "vel": 252.0, "vr": 0.0, "squawk": "7133"},
+            {"callsign": "IGO204", "icao24": "8008a1", "airline": "IndiGo Airlines", "type_code": "A20N", "dest_iata": "DEL", "lat_offset": 0.24, "lon_offset": -0.12, "alt": 10668.0, "vel": 236.0, "vr": 0.0, "squawk": "3340"},
+            {"callsign": "AIC672", "icao24": "8004a2", "airline": "Air India", "type_code": "A320", "dest_iata": "BOM", "lat_offset": 0.18, "lon_offset": -0.25, "alt": 9753.0, "vel": 228.0, "vr": -0.3, "squawk": "4115"},
+            {"callsign": "SIA417", "icao24": "76cd02", "airline": "Singapore Airlines", "type_code": "A359", "dest_iata": "SIN", "lat_offset": -0.22, "lon_offset": 0.35, "alt": 11582.0, "vel": 250.0, "vr": 0.0, "squawk": "6512"},
+            {"callsign": "UAE547", "icao24": "8961ad", "airline": "Emirates", "type_code": "B77W", "dest_iata": "DXB", "lat_offset": 0.29, "lon_offset": -0.32, "alt": 11887.0, "vel": 252.0, "vr": 0.0, "squawk": "7133"},
         ]
     },
     "Kolkata (VECC)": {
@@ -236,10 +236,10 @@ AIRPORTS = {
             "BKK": DESTINATION_AIRPORTS["BKK"],
         },
         "sample_flights": [
-            {"callsign": "AIC701", "icao24": "8005b8", "airline": "Air India", "dest_iata": "DEL", "lat_offset": 0.22, "lon_offset": -0.28, "alt": 10668.0, "vel": 235.0, "vr": -0.5, "squawk": "4220"},
-            {"callsign": "IGO292", "icao24": "8009c4", "airline": "IndiGo Airlines", "dest_iata": "BLR", "lat_offset": -0.26, "lon_offset": -0.22, "alt": 10058.0, "vel": 230.0, "vr": 0.0, "squawk": "3104"},
-            {"callsign": "IGO521", "icao24": "8007d2", "airline": "IndiGo Airlines", "dest_iata": "BOM", "lat_offset": -0.15, "lon_offset": -0.31, "alt": 9753.0, "vel": 226.0, "vr": 0.0, "squawk": "3412"},
-            {"callsign": "THA314", "icao24": "8804ad", "airline": "Thai Airways", "dest_iata": "BKK", "lat_offset": -0.20, "lon_offset": 0.35, "alt": 11277.0, "vel": 248.0, "vr": 0.0, "squawk": "5201"},
+            {"callsign": "AIC701", "icao24": "8005b8", "airline": "Air India", "type_code": "A20N", "dest_iata": "DEL", "lat_offset": 0.22, "lon_offset": -0.28, "alt": 10668.0, "vel": 235.0, "vr": -0.5, "squawk": "4220"},
+            {"callsign": "IGO292", "icao24": "8009c4", "airline": "IndiGo Airlines", "type_code": "A321", "dest_iata": "BLR", "lat_offset": -0.26, "lon_offset": -0.22, "alt": 10058.0, "vel": 230.0, "vr": 0.0, "squawk": "3104"},
+            {"callsign": "IGO521", "icao24": "8007d2", "airline": "IndiGo Airlines", "type_code": "AT76", "dest_iata": "BOM", "lat_offset": -0.15, "lon_offset": -0.31, "alt": 9753.0, "vel": 226.0, "vr": 0.0, "squawk": "3412"},
+            {"callsign": "THA314", "icao24": "8804ad", "airline": "Thai Airways", "type_code": "B77W", "dest_iata": "BKK", "lat_offset": -0.20, "lon_offset": 0.35, "alt": 11277.0, "vel": 248.0, "vr": 0.0, "squawk": "5201"},
         ]
     },
     "Pune (VAPO)": {
@@ -257,10 +257,10 @@ AIRPORTS = {
             "GOI": DESTINATION_AIRPORTS["GOI"],
         },
         "sample_flights": [
-            {"callsign": "IGO2419", "icao24": "8008a1", "airline": "IndiGo Airlines", "dest_iata": "DEL", "lat_offset": 0.25, "lon_offset": 0.14, "alt": 10363.0, "vel": 232.0, "vr": 0.0, "squawk": "3215"},
-            {"callsign": "AKJ1421", "icao24": "800b33", "airline": "Akasa Air", "dest_iata": "BLR", "lat_offset": -0.22, "lon_offset": 0.18, "alt": 9450.0, "vel": 222.0, "vr": 0.0, "squawk": "6102"},
-            {"callsign": "IGO718", "icao24": "8007a5", "airline": "IndiGo Airlines", "dest_iata": "AMD", "lat_offset": 0.20, "lon_offset": -0.15, "alt": 8840.0, "vel": 218.0, "vr": 0.0, "squawk": "3045"},
-            {"callsign": "SEJ223", "icao24": "8003ef", "airline": "SpiceJet", "dest_iata": "GOI", "lat_offset": -0.28, "lon_offset": -0.05, "alt": 7620.0, "vel": 205.0, "vr": -0.3, "squawk": "2114"},
+            {"callsign": "IGO2419", "icao24": "8008a1", "airline": "IndiGo Airlines", "type_code": "A20N", "dest_iata": "DEL", "lat_offset": 0.25, "lon_offset": 0.14, "alt": 10363.0, "vel": 232.0, "vr": 0.0, "squawk": "3215"},
+            {"callsign": "AKJ1421", "icao24": "800b33", "airline": "Akasa Air", "type_code": "B38M", "dest_iata": "BLR", "lat_offset": -0.22, "lon_offset": 0.18, "alt": 9450.0, "vel": 222.0, "vr": 0.0, "squawk": "6102"},
+            {"callsign": "IGO718", "icao24": "8007a5", "airline": "IndiGo Airlines", "type_code": "A320", "dest_iata": "AMD", "lat_offset": 0.20, "lon_offset": -0.15, "alt": 8840.0, "vel": 218.0, "vr": 0.0, "squawk": "3045"},
+            {"callsign": "SEJ223", "icao24": "8003ef", "airline": "SpiceJet", "type_code": "B738", "dest_iata": "GOI", "lat_offset": -0.28, "lon_offset": -0.05, "alt": 7620.0, "vel": 205.0, "vr": -0.3, "squawk": "2114"},
         ]
     },
     "Ahmedabad (VAAH)": {
@@ -278,10 +278,10 @@ AIRPORTS = {
             "DXB": DESTINATION_AIRPORTS["DXB"],
         },
         "sample_flights": [
-            {"callsign": "AIC019", "icao24": "8005b8", "airline": "Air India", "dest_iata": "BOM", "lat_offset": -0.22, "lon_offset": 0.06, "alt": 8840.0, "vel": 218.0, "vr": -0.4, "squawk": "4201"},
-            {"callsign": "IGO211", "icao24": "8008a1", "airline": "IndiGo Airlines", "dest_iata": "DEL", "lat_offset": 0.26, "lon_offset": 0.20, "alt": 10058.0, "vel": 230.0, "vr": 0.0, "squawk": "3145"},
-            {"callsign": "AIC171", "icao24": "8004f1", "airline": "Air India", "dest_iata": "LGW", "lat_offset": 0.32, "lon_offset": -0.31, "alt": 11277.0, "vel": 248.0, "vr": 0.0, "squawk": "5102"},
-            {"callsign": "UAE539", "icao24": "8962ff", "airline": "Emirates", "dest_iata": "DXB", "lat_offset": 0.18, "lon_offset": -0.28, "alt": 11582.0, "vel": 250.0, "vr": 0.0, "squawk": "7033"},
+            {"callsign": "AIC019", "icao24": "8005b8", "airline": "Air India", "type_code": "A20N", "dest_iata": "BOM", "lat_offset": -0.22, "lon_offset": 0.06, "alt": 8840.0, "vel": 218.0, "vr": -0.4, "squawk": "4201"},
+            {"callsign": "IGO211", "icao24": "8008a1", "airline": "IndiGo Airlines", "type_code": "A321", "dest_iata": "DEL", "lat_offset": 0.26, "lon_offset": 0.20, "alt": 10058.0, "vel": 230.0, "vr": 0.0, "squawk": "3145"},
+            {"callsign": "AIC171", "icao24": "8004f1", "airline": "Air India", "type_code": "B788", "dest_iata": "LGW", "lat_offset": 0.32, "lon_offset": -0.31, "alt": 11277.0, "vel": 248.0, "vr": 0.0, "squawk": "5102"},
+            {"callsign": "UAE539", "icao24": "8962ff", "airline": "Emirates", "type_code": "B77W", "dest_iata": "DXB", "lat_offset": 0.18, "lon_offset": -0.28, "alt": 11582.0, "vel": 250.0, "vr": 0.0, "squawk": "7033"},
         ]
     },
     "Kochi (VOCI)": {
@@ -299,10 +299,10 @@ AIRPORTS = {
             "DOH": DESTINATION_AIRPORTS["DOH"],
         },
         "sample_flights": [
-            {"callsign": "UAE531", "icao24": "8961ad", "airline": "Emirates", "dest_iata": "DXB", "lat_offset": 0.25, "lon_offset": -0.28, "alt": 11582.0, "vel": 252.0, "vr": 0.0, "squawk": "7115"},
-            {"callsign": "IGO425", "icao24": "8007d2", "airline": "IndiGo Airlines", "dest_iata": "BLR", "lat_offset": 0.20, "lon_offset": 0.15, "alt": 7925.0, "vel": 210.0, "vr": 0.0, "squawk": "3201"},
-            {"callsign": "AIC832", "icao24": "8005b8", "airline": "Air India", "dest_iata": "DEL", "lat_offset": 0.30, "lon_offset": 0.08, "alt": 10668.0, "vel": 236.0, "vr": -0.4, "squawk": "4232"},
-            {"callsign": "QTR515", "icao24": "06a12b", "airline": "Qatar Airways", "dest_iata": "DOH", "lat_offset": 0.28, "lon_offset": -0.32, "alt": 11887.0, "vel": 254.0, "vr": 0.0, "squawk": "7510"},
+            {"callsign": "UAE531", "icao24": "8961ad", "airline": "Emirates", "type_code": "B77W", "dest_iata": "DXB", "lat_offset": 0.25, "lon_offset": -0.28, "alt": 11582.0, "vel": 252.0, "vr": 0.0, "squawk": "7115"},
+            {"callsign": "IGO425", "icao24": "8007d2", "airline": "IndiGo Airlines", "type_code": "AT76", "dest_iata": "BLR", "lat_offset": 0.20, "lon_offset": 0.15, "alt": 7925.0, "vel": 210.0, "vr": 0.0, "squawk": "3201"},
+            {"callsign": "AIC832", "icao24": "8005b8", "airline": "Air India", "type_code": "A20N", "dest_iata": "DEL", "lat_offset": 0.30, "lon_offset": 0.08, "alt": 10668.0, "vel": 236.0, "vr": -0.4, "squawk": "4232"},
+            {"callsign": "QTR515", "icao24": "06a12b", "airline": "Qatar Airways", "type_code": "A359", "dest_iata": "DOH", "lat_offset": 0.28, "lon_offset": -0.32, "alt": 11887.0, "vel": 254.0, "vr": 0.0, "squawk": "7510"},
         ]
     },
     "Dubai (OMDB)": {
@@ -320,10 +320,10 @@ AIRPORTS = {
             "SIN": DESTINATION_AIRPORTS["SIN"],
         },
         "sample_flights": [
-            {"callsign": "UAE001", "icao24": "8961ad", "airline": "Emirates", "dest_iata": "LHR", "lat_offset": 0.32, "lon_offset": -0.25, "alt": 11887.0, "vel": 254.0, "vr": 0.0, "squawk": "7001"},
-            {"callsign": "UAE504", "icao24": "8962ff", "airline": "Emirates", "dest_iata": "BOM", "lat_offset": -0.20, "lon_offset": 0.32, "alt": 11277.0, "vel": 248.0, "vr": 0.0, "squawk": "7204"},
-            {"callsign": "UAE201", "icao24": "8963bb", "airline": "Emirates", "dest_iata": "JFK", "lat_offset": 0.38, "lon_offset": -0.35, "alt": 12192.0, "vel": 258.0, "vr": 0.0, "squawk": "7201"},
-            {"callsign": "UAE354", "icao24": "8960fa", "airline": "Emirates", "dest_iata": "SIN", "lat_offset": -0.25, "lon_offset": 0.38, "alt": 11582.0, "vel": 250.0, "vr": 0.0, "squawk": "7354"},
+            {"callsign": "UAE001", "icao24": "8961ad", "airline": "Emirates", "type_code": "A388", "dest_iata": "LHR", "lat_offset": 0.32, "lon_offset": -0.25, "alt": 11887.0, "vel": 254.0, "vr": 0.0, "squawk": "7001"},
+            {"callsign": "UAE504", "icao24": "8962ff", "airline": "Emirates", "type_code": "B77W", "dest_iata": "BOM", "lat_offset": -0.20, "lon_offset": 0.32, "alt": 11277.0, "vel": 248.0, "vr": 0.0, "squawk": "7204"},
+            {"callsign": "UAE201", "icao24": "8963bb", "airline": "Emirates", "type_code": "A388", "dest_iata": "JFK", "lat_offset": 0.38, "lon_offset": -0.35, "alt": 12192.0, "vel": 258.0, "vr": 0.0, "squawk": "7201"},
+            {"callsign": "UAE354", "icao24": "8960fa", "airline": "Emirates", "type_code": "B77W", "dest_iata": "SIN", "lat_offset": -0.25, "lon_offset": 0.38, "alt": 11582.0, "vel": 250.0, "vr": 0.0, "squawk": "7354"},
         ]
     },
     "London Heathrow (EGLL)": {
@@ -341,10 +341,10 @@ AIRPORTS = {
             "BOM": DESTINATION_AIRPORTS["BOM"],
         },
         "sample_flights": [
-            {"callsign": "BAW177", "icao24": "4009bb", "airline": "British Airways", "dest_iata": "JFK", "lat_offset": 0.28, "lon_offset": -0.35, "alt": 11277.0, "vel": 248.0, "vr": 0.0, "squawk": "5412"},
-            {"callsign": "VIR301", "icao24": "4008ee", "airline": "Virgin Atlantic", "dest_iata": "DEL", "lat_offset": -0.22, "lon_offset": 0.35, "alt": 11582.0, "vel": 252.0, "vr": 0.0, "squawk": "6103"},
-            {"callsign": "DLH901", "icao24": "3c66ad", "airline": "Lufthansa", "dest_iata": "FRA", "lat_offset": -0.15, "lon_offset": 0.28, "alt": 9753.0, "vel": 228.0, "vr": 0.0, "squawk": "4321"},
-            {"callsign": "BAW139", "icao24": "4007aa", "airline": "British Airways", "dest_iata": "BOM", "lat_offset": -0.25, "lon_offset": 0.32, "alt": 11887.0, "vel": 255.0, "vr": 0.0, "squawk": "5139"},
+            {"callsign": "BAW177", "icao24": "4009bb", "airline": "British Airways", "type_code": "B77W", "dest_iata": "JFK", "lat_offset": 0.28, "lon_offset": -0.35, "alt": 11277.0, "vel": 248.0, "vr": 0.0, "squawk": "5412"},
+            {"callsign": "VIR301", "icao24": "4008ee", "airline": "Virgin Atlantic", "type_code": "A359", "dest_iata": "DEL", "lat_offset": -0.22, "lon_offset": 0.35, "alt": 11582.0, "vel": 252.0, "vr": 0.0, "squawk": "6103"},
+            {"callsign": "DLH901", "icao24": "3c66ad", "airline": "Lufthansa", "type_code": "A320", "dest_iata": "FRA", "lat_offset": -0.15, "lon_offset": 0.28, "alt": 9753.0, "vel": 228.0, "vr": 0.0, "squawk": "4321"},
+            {"callsign": "BAW139", "icao24": "4007aa", "airline": "British Airways", "type_code": "B788", "dest_iata": "BOM", "lat_offset": -0.25, "lon_offset": 0.32, "alt": 11887.0, "vel": 255.0, "vr": 0.0, "squawk": "5139"},
         ]
     },
     "Frankfurt (EDDF)": {
@@ -362,10 +362,10 @@ AIRPORTS = {
             "SIN": DESTINATION_AIRPORTS["SIN"],
         },
         "sample_flights": [
-            {"callsign": "DLH400", "icao24": "3c66ad", "airline": "Lufthansa", "dest_iata": "JFK", "lat_offset": 0.25, "lon_offset": -0.32, "alt": 11582.0, "vel": 250.0, "vr": 0.0, "squawk": "4400"},
-            {"callsign": "DLH760", "icao24": "3c67bb", "airline": "Lufthansa", "dest_iata": "DEL", "lat_offset": -0.20, "lon_offset": 0.35, "alt": 11887.0, "vel": 254.0, "vr": 0.0, "squawk": "4760"},
-            {"callsign": "BAW903", "icao24": "4009bb", "airline": "British Airways", "dest_iata": "LHR", "lat_offset": 0.18, "lon_offset": -0.28, "alt": 9753.0, "vel": 226.0, "vr": 0.0, "squawk": "5903"},
-            {"callsign": "SIA025", "icao24": "76cd02", "airline": "Singapore Airlines", "dest_iata": "SIN", "lat_offset": -0.28, "lon_offset": 0.38, "alt": 12192.0, "vel": 258.0, "vr": 0.0, "squawk": "6025"},
+            {"callsign": "DLH400", "icao24": "3c66ad", "airline": "Lufthansa", "type_code": "B748", "dest_iata": "JFK", "lat_offset": 0.25, "lon_offset": -0.32, "alt": 11582.0, "vel": 250.0, "vr": 0.0, "squawk": "4400"},
+            {"callsign": "DLH760", "icao24": "3c67bb", "airline": "Lufthansa", "type_code": "A359", "dest_iata": "DEL", "lat_offset": -0.20, "lon_offset": 0.35, "alt": 11887.0, "vel": 254.0, "vr": 0.0, "squawk": "4760"},
+            {"callsign": "BAW903", "icao24": "4009bb", "airline": "British Airways", "type_code": "A320", "dest_iata": "LHR", "lat_offset": 0.18, "lon_offset": -0.28, "alt": 9753.0, "vel": 226.0, "vr": 0.0, "squawk": "5903"},
+            {"callsign": "SIA025", "icao24": "76cd02", "airline": "Singapore Airlines", "type_code": "B77W", "dest_iata": "SIN", "lat_offset": -0.28, "lon_offset": 0.38, "alt": 12192.0, "vel": 258.0, "vr": 0.0, "squawk": "6025"},
         ]
     },
     "Singapore (WSSS)": {
@@ -383,10 +383,10 @@ AIRPORTS = {
             "SYD": DESTINATION_AIRPORTS["SYD"],
         },
         "sample_flights": [
-            {"callsign": "SIA308", "icao24": "76cd02", "airline": "Singapore Airlines", "dest_iata": "LHR", "lat_offset": 0.30, "lon_offset": -0.32, "alt": 11887.0, "vel": 254.0, "vr": 0.0, "squawk": "6308"},
-            {"callsign": "SIA422", "icao24": "76ce11", "airline": "Singapore Airlines", "dest_iata": "BOM", "lat_offset": 0.22, "lon_offset": -0.28, "alt": 11277.0, "vel": 248.0, "vr": 0.0, "squawk": "6422"},
-            {"callsign": "SIA404", "icao24": "76cf22", "airline": "Singapore Airlines", "dest_iata": "DEL", "lat_offset": 0.26, "lon_offset": -0.25, "alt": 11582.0, "vel": 250.0, "vr": 0.0, "squawk": "6404"},
-            {"callsign": "QFA001", "icao24": "7c1234", "airline": "Qantas", "dest_iata": "SYD", "lat_offset": -0.32, "lon_offset": 0.35, "alt": 12192.0, "vel": 256.0, "vr": 0.0, "squawk": "7001"},
+            {"callsign": "SIA308", "icao24": "76cd02", "airline": "Singapore Airlines", "type_code": "A388", "dest_iata": "LHR", "lat_offset": 0.30, "lon_offset": -0.32, "alt": 11887.0, "vel": 254.0, "vr": 0.0, "squawk": "6308"},
+            {"callsign": "SIA422", "icao24": "76ce11", "airline": "Singapore Airlines", "type_code": "A359", "dest_iata": "BOM", "lat_offset": 0.22, "lon_offset": -0.28, "alt": 11277.0, "vel": 248.0, "vr": 0.0, "squawk": "6422"},
+            {"callsign": "SIA404", "icao24": "76cf22", "airline": "Singapore Airlines", "type_code": "B77W", "dest_iata": "DEL", "lat_offset": 0.26, "lon_offset": -0.25, "alt": 11582.0, "vel": 250.0, "vr": 0.0, "squawk": "6404"},
+            {"callsign": "QFA001", "icao24": "7c1234", "airline": "Qantas", "type_code": "A388", "dest_iata": "SYD", "lat_offset": -0.32, "lon_offset": 0.35, "alt": 12192.0, "vel": 256.0, "vr": 0.0, "squawk": "7001"},
         ]
     },
     "New York JFK (KJFK)": {
@@ -404,10 +404,10 @@ AIRPORTS = {
             "LAX": DESTINATION_AIRPORTS["LAX"],
         },
         "sample_flights": [
-            {"callsign": "BAW112", "icao24": "4009bb", "airline": "British Airways", "dest_iata": "LHR", "lat_offset": 0.28, "lon_offset": 0.32, "alt": 11582.0, "vel": 252.0, "vr": 0.0, "squawk": "5112"},
-            {"callsign": "DLH401", "icao24": "3c66ad", "airline": "Lufthansa", "dest_iata": "FRA", "lat_offset": 0.24, "lon_offset": 0.35, "alt": 11887.0, "vel": 254.0, "vr": 0.0, "squawk": "4401"},
-            {"callsign": "AIC116", "icao24": "8005b8", "airline": "Air India", "dest_iata": "BOM", "lat_offset": 0.30, "lon_offset": 0.38, "alt": 12192.0, "vel": 256.0, "vr": 0.0, "squawk": "4116"},
-            {"callsign": "DAL418", "icao24": "a123bc", "airline": "Delta Air Lines", "dest_iata": "LAX", "lat_offset": -0.18, "lon_offset": -0.35, "alt": 10668.0, "vel": 236.0, "vr": 0.0, "squawk": "2418"},
+            {"callsign": "BAW112", "icao24": "4009bb", "airline": "British Airways", "type_code": "B77W", "dest_iata": "LHR", "lat_offset": 0.28, "lon_offset": 0.32, "alt": 11582.0, "vel": 252.0, "vr": 0.0, "squawk": "5112"},
+            {"callsign": "DLH401", "icao24": "3c66ad", "airline": "Lufthansa", "type_code": "B748", "dest_iata": "FRA", "lat_offset": 0.24, "lon_offset": 0.35, "alt": 11887.0, "vel": 254.0, "vr": 0.0, "squawk": "4401"},
+            {"callsign": "AIC116", "icao24": "8005b8", "airline": "Air India", "type_code": "B77W", "dest_iata": "BOM", "lat_offset": 0.30, "lon_offset": 0.38, "alt": 12192.0, "vel": 256.0, "vr": 0.0, "squawk": "4116"},
+            {"callsign": "DAL418", "icao24": "a123bc", "airline": "Delta Air Lines", "type_code": "B738", "dest_iata": "LAX", "lat_offset": -0.18, "lon_offset": -0.35, "alt": 10668.0, "vel": 236.0, "vr": 0.0, "squawk": "2418"},
         ]
     },
 }
@@ -618,6 +618,7 @@ def discover_flights(api, lat: float, lon: float, radius_km: float, hub_name: Op
                 "squawk": sf.get("squawk", "2000"),
                 "airline": sf.get("airline", "Commercial Carrier"),
                 "dest_iata": sf.get("dest_iata", "ARR"),
+                "type_code": sf.get("type_code"),
             })
 
     return sorted(flights, key=lambda item: item["distance_km"])
@@ -2280,7 +2281,8 @@ def main():
     # TAB 2: AIRCRAFT MODEL & FLEET INTELLIGENCE
     # =========================================================
     with tab_aircraft:
-        intel = aircraft_intel.get_full_aircraft_intelligence(icao24, callsign)
+        pref_type = selected_target.get("type_code") if selected_target else None
+        intel = aircraft_intel.get_full_aircraft_intelligence(icao24, callsign, preferred_type=pref_type)
         specs = intel["specs"]
 
         st.markdown(
@@ -2324,10 +2326,14 @@ def main():
 
         st.markdown("### Technical Specifications & Engineering Envelope")
         g1, g2, g3, g4 = st.columns(4)
-        g1.metric("WINGSPAN", specs["wingspan"].split()[0] + " m", "Geometric Span")
-        g2.metric("CRUISE SPEED", specs["cruise_speed"].split()[0], "Mach / True Airspeed")
-        g3.metric("SERVICE CEILING", specs["service_ceiling"].split()[0] + " ft", "Pressure Altitude")
-        g4.metric("MAXIMUM RANGE", specs["range"].split()[0] + " km", "Design Payload Range")
+        wingspan_disp = specs["wingspan"].split("(")[0].strip()
+        cruise_disp = specs["cruise_speed"].split("(")[0].strip()
+        ceiling_disp = specs["service_ceiling"].split("(")[0].strip()
+        range_disp = specs["range"].split("(")[0].strip()
+        g1.metric("WINGSPAN", wingspan_disp, "Geometric Span")
+        g2.metric("CRUISE SPEED", cruise_disp, "Mach / True Airspeed")
+        g3.metric("SERVICE CEILING", ceiling_disp, "Pressure Altitude")
+        g4.metric("MAXIMUM RANGE", range_disp, "Design Payload Range")
 
         t1, t2 = st.columns(2)
         with t1:

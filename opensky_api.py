@@ -93,7 +93,7 @@ class TokenManager:
                 "client_id": self._client_id,
                 "client_secret": self._client_secret,
             },
-            timeout=15.0,
+            timeout=3.0,
         )
         r.raise_for_status()
 
@@ -437,7 +437,7 @@ class OpenSkyApi:
         r = self._session.get(
             f"{self._api_url}{url_post}",
             params=params,
-            timeout=15.00,
+            timeout=3.0,
         )
         if r.status_code == 200:
             self._last_requests[callee] = time.time()
