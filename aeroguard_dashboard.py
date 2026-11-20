@@ -1079,6 +1079,18 @@ def initialize():
         if k not in st.session_state:
             st.session_state[k] = v
 
+    if not st.session_state.flights:
+        cur_hub = st.session_state.get("location_source", "Nagpur (VANP)")
+        cur_lat = st.session_state.get("location_lat", 21.0922)
+        cur_lon = st.session_state.get("location_lon", 79.0472)
+        st.session_state.flights = discover_flights(
+            load_api(),
+            cur_lat,
+            cur_lon,
+            200,
+            hub_name=cur_hub,
+        )
+
 
 def select_flight(flight):
     st.session_state.is_monitoring = True
@@ -1730,6 +1742,104 @@ def main():
             font-family: 'Chivo Mono', monospace;
         }
 
+        /* AeroGuard Info & System Guide Cards */
+        .foc-guide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            margin: 14px 0 24px 0;
+        }
+
+        .foc-info-card {
+            background: #0E1420;
+            border: 1px solid var(--foc-border);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+            transition: border-color 0.2s ease, transform 0.15s ease;
+        }
+
+        .foc-info-card:hover {
+            border-color: var(--foc-gold);
+            transform: translateY(-2px);
+        }
+
+        .foc-info-card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .foc-info-icon {
+            font-size: 20px;
+            background: #162032;
+            border: 1px solid var(--foc-border-highlight);
+            border-radius: 6px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .foc-info-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #FFFFFF;
+            font-family: 'Space Grotesk', sans-serif;
+            margin: 0;
+        }
+
+        .foc-info-body {
+            font-size: 13px;
+            color: var(--foc-text-dim);
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .foc-step-card {
+            background: #0E1420;
+            border: 1px solid var(--foc-border);
+            border-left: 3px solid var(--foc-gold);
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+        }
+
+        .foc-step-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .foc-step-badge {
+            background: var(--foc-gold);
+            color: #06090E;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 3px 9px;
+            border-radius: 4px;
+            letter-spacing: 0.8px;
+        }
+
+        .foc-step-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #FFFFFF;
+            font-family: 'Space Grotesk', sans-serif;
+            margin: 0;
+        }
+
+        .foc-step-desc {
+            font-size: 13.5px;
+            color: var(--foc-text-dim);
+            line-height: 1.65;
+            margin: 0;
+        }
+
         /* ========================================================
            MOBILE RESPONSIVENESS & ACCESSIBILITY (SCREEN <= 768px)
            ======================================================== */
@@ -1994,21 +2104,37 @@ def main():
     # STATE A: STANDBY CONSOLE (USER HAS NOT STARTED YET)
     # ---------------------------------------------------------
     if not is_active:
+        flights = st.session_state.flights or []
         st.markdown(
             f"""
             <div class="foc-standby-console">
-                <h3 style="margin: 0 0 8px 0; color: #FFFFFF; font-family: 'Space Grotesk', sans-serif;">Flight Operations Command Center is in Standby</h3>
-                <p style="color: var(--foc-text-dim); font-size: 14px; margin: 0 0 18px 0;">
-                    Airspace surveillance radar is idle. Select your radar surveillance hub below or in the tactical sidebar, scan for active transponders, and click <strong>Initiate Telemetry Monitoring</strong>.
-                </p>
-                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+                    <div>
+                        <div class="foc-airframe-tag">AVIONICS SURVEILLANCE & AI SAFETY INTELLIGENCE PLATFORM</div>
+                        <h2 style="margin: 4px 0 8px 0; color: #FFFFFF; font-family: 'Space Grotesk', sans-serif; font-size: 24px;">
+                            Airspace Telemetry & Flight Envelope Operations
+                        </h2>
+                        <p style="color: var(--foc-text-dim); font-size: 14px; margin: 0 0 16px 0; max-width: 820px; line-height: 1.5;">
+                            AeroGuard delivers real-time 1090MHz Mode-S ADS-B surveillance, physics-driven flight envelope quality assurance, deep OEM fleet intelligence dossiers, and ICAO GADSS compliant digital flight data recording (DFDR).
+                        </p>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 14px; flex-wrap: wrap;">
                     <div class="foc-standby-hub-box">
-                        <div class="foc-hub-label">ACTIVE RADAR SURVEILLANCE HUB</div>
+                        <div class="foc-hub-label">RADAR SURVEILLANCE SECTOR</div>
                         <div class="foc-hub-val">{st.session_state.location_source}</div>
                     </div>
                     <div class="foc-standby-hub-box">
                         <div class="foc-hub-label">GEODETIC RADAR COORDINATES</div>
                         <div class="foc-hub-val" style="color: #FFFFFF;">{st.session_state.location_lat:.4f}° N, {st.session_state.location_lon:.4f}° E</div>
+                    </div>
+                    <div class="foc-standby-hub-box">
+                        <div class="foc-hub-label">AIRSPACE TARGETS IN RANGE</div>
+                        <div class="foc-hub-val" style="color: #00E5FF;">{len(flights)} Active Airframes</div>
+                    </div>
+                    <div class="foc-standby-hub-box">
+                        <div class="foc-hub-label">AI SAFETY INFERENCE ENGINE</div>
+                        <div class="foc-hub-val" style="color: #00E676;">Ready · Online</div>
                     </div>
                 </div>
             </div>
@@ -2016,62 +2142,115 @@ def main():
             unsafe_allow_html=True
         )
 
-        st.markdown("### Step 1: Select Radar Location & Scan Horizon")
-        col_city, col_radius, col_btn = st.columns([2, 2, 2])
+        st.markdown("### ✈️ About AeroGuard Avionics System")
+        st.markdown(
+            """
+            <div class="foc-guide-grid">
+                <div class="foc-info-card">
+                    <div class="foc-info-card-header">
+                        <div class="foc-info-icon">🛰️</div>
+                        <h4 class="foc-info-title">Continuous ADS-B Surveillance</h4>
+                    </div>
+                    <p class="foc-info-body">
+                        Interrogates 1090MHz Mode-S transponder telemetry in real-time across 15 premier aviation hubs, streaming pressure altitude, ground airspeed, heading track vectors, and climb/descent rates.
+                    </p>
+                </div>
+                <div class="foc-info-card">
+                    <div class="foc-info-card-header">
+                        <div class="foc-info-icon">🧠</div>
+                        <h4 class="foc-info-title">Dynamic Flight Envelope AI</h4>
+                    </div>
+                    <p class="foc-info-body">
+                        Supervised machine learning model trained on aerodynamic kinematics (climb gradients, kinetic acceleration, velocity variance) to predict unstabilized excursions and anomaly confidence scores.
+                    </p>
+                </div>
+                <div class="foc-info-card">
+                    <div class="foc-info-card-header">
+                        <div class="foc-info-icon">✈️</div>
+                        <h4 class="foc-info-title">OEM Fleet Intelligence Dossiers</h4>
+                    </div>
+                    <p class="foc-info-body">
+                        Instant technical dossiers for major commercial airliners (Boeing 777, 787, 747, 737 MAX, Airbus A380, A350, A320neo, ATR 72) with authentic livery photography and engineering envelopes.
+                    </p>
+                </div>
+                <div class="foc-info-card">
+                    <div class="foc-info-card-header">
+                        <div class="foc-info-icon">🔒</div>
+                        <h4 class="foc-info-title">ICAO GADSS DFDR Black Box</h4>
+                    </div>
+                    <p class="foc-info-body">
+                        Digital flight data recorder (DFDR) capturing microsecond telemetry streams, flight route milestones, dispatch routing logs, and raw CSV session exports for safety auditing.
+                    </p>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        st.markdown("### 🧭 Standard Operating Procedure: Navigation & Model Inspection")
         
-        city_keys = list(CITIES.keys())
-        current_hub = st.session_state.get("location_source", "Nagpur (VANP)")
-        hub_idx = city_keys.index(current_hub) if current_hub in city_keys else 0
+        st.markdown(
+            """
+            <div class="foc-step-card">
+                <div class="foc-step-header">
+                    <span class="foc-step-badge">STEP 1</span>
+                    <h4 class="foc-step-title">Configure Airspace Radar Horizon in Sidebar</h4>
+                </div>
+                <p class="foc-step-desc">
+                    Open the tactical sidebar on the left. Under <strong>Radar Horizon & Operations</strong>, choose your target <strong>Air Traffic Radar Hub</strong> (e.g. <em>Bengaluru VOBL, Nagpur VANP, Mumbai VABB, Delhi VIDP, Dubai OMDB, London Heathrow EGLL, Frankfurt EDDF, New York JFK</em>). Adjust the <strong>Horizon Range (km)</strong> slider (25 to 600 km) and click <strong>Scan Horizon for Aircraft</strong>.
+                </p>
+            </div>
 
-        with col_city:
-            quick_city = st.selectbox("Select Departure / Transit Hub", city_keys, index=hub_idx, key="quick_city_select")
-        with col_radius:
-            quick_radius = st.slider("Radar Horizon (km)", 50, 500, 200, 25, key="quick_radius_slider")
-        with col_btn:
-            st.write("")
-            st.write("")
-            manual_scan = st.button("📡 Re-Scan Horizon", type="primary", use_container_width=True, key="quick_scan_btn")
+            <div class="foc-step-card">
+                <div class="foc-step-header">
+                    <span class="foc-step-badge">STEP 2</span>
+                    <h4 class="foc-step-title">Select Target Aircraft & Launch Telemetry Ingestion</h4>
+                </div>
+                <p class="foc-step-desc">
+                    In the sidebar, inspect the <strong>Select Target Aircraft</strong> dropdown listing all active transponders detected in the sector (showing Callsign, Mode-S Hex, and radial distance). Choose the aircraft you wish to inspect and click <strong>▶ Start</strong> to lock onto the telemetry stream.
+                </p>
+            </div>
 
-        # INSTANT REACTIVE SYNC: If user changed the dropdown, or clicked Re-Scan, or initial flights list is empty
-        hub_changed = quick_city != st.session_state.get("location_source")
-        if hub_changed or manual_scan or not st.session_state.flights:
-            st.session_state.location_source = quick_city
-            st.session_state.location_lat = CITIES[quick_city][0]
-            st.session_state.location_lon = CITIES[quick_city][1]
-            with st.spinner(f"Interrogating ADS-B horizon near {quick_city}..."):
-                st.session_state.flights = discover_flights(
-                    load_api(),
-                    st.session_state.location_lat,
-                    st.session_state.location_lon,
-                    quick_radius,
-                    hub_name=quick_city,
-                )
-            if hub_changed or manual_scan:
-                st.rerun()
+            <div class="foc-step-card">
+                <div class="foc-step-header">
+                    <span class="foc-step-badge">STEP 3</span>
+                    <h4 class="foc-step-title">Inspect the Model Across the 3 Tactical Decks</h4>
+                </div>
+                <p class="foc-step-desc">
+                    Once monitoring is active, use the main deck tabs to inspect the aircraft and model predictions:
+                    <br>• <strong>🛰️ Deck 1 — Flight Radar & Telemetry Deck:</strong> Observe the Carto dark geospatial radar map with bearing vectors and range rings. Monitor Primary Flight Display gauges (Altitude, Speed, Vertical Speed, Heading, Squawk). Review the <strong>AI Safety Envelope & Anomaly Score</strong> gauge to verify whether the aircraft is operating within nominal flight envelope boundaries (&le; 0.40) or showing anomalous deviations.
+                    <br>• <strong>✈️ Deck 2 — Aircraft Model & Fleet Intelligence:</strong> Access verified OEM technical dossiers, manufacturer origin, maiden flight history, engine powerplants, wingspan, service ceiling, and authentic aircraft livery photography.
+                    <br>• <strong>🔒 Deck 3 — Flight Recorder (Black Box) & Dispatch:</strong> Audit the live Digital Flight Data Recorder (DFDR) stream and download complete flight parameter logs as CSV for safety investigations.
+                </p>
+            </div>
 
-        # Step 2: Show Discovered Aircraft & Start Button
-        if st.session_state.flights:
-            st.markdown(f"### Step 2: Discovered Airborne Targets near {st.session_state.location_source}")
+            <div class="foc-step-card">
+                <div class="foc-step-header">
+                    <span class="foc-step-badge">STEP 4</span>
+                    <h4 class="foc-step-title">Freeze Telemetry or Switch Airframes</h4>
+                </div>
+                <p class="foc-step-desc">
+                    Click <strong>⏹ Stop</strong> in the sidebar or top banner at any time to halt live polling, preserve telemetry history, or switch to a different aircraft or radar hub.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        # Traffic Radar Horizon Overview Table
+        if flights:
+            st.markdown(f"### 📡 Active Airborne Targets Detected Near {st.session_state.location_source}")
+            st.info("👈 **Action Required:** Select your target aircraft from the sidebar on the left and click **▶ Start** to initiate telemetry monitoring.")
             
-            flight_dict = {
-                f"{f['callsign']} | Mode-S: {f['icao24'].upper()} | Alt: {f['altitude']*3.28084:,.0f} ft | Speed: {f['velocity']*1.94384:.0f} kts | {f['distance_km']:.0f} km away": f
-                for f in st.session_state.flights
-            }
-            
-            target_selection = st.selectbox("Choose an aircraft to monitor:", list(flight_dict.keys()), key="target_selection")
-            
-            col_launch, col_space = st.columns([2, 3])
-            with col_launch:
-                if st.button("🚀 INITIATE TELEMETRY MONITORING", type="primary", use_container_width=True, key="initiate_btn"):
-                    select_flight(flight_dict[target_selection])
-                    st.rerun()
-
-            # Preview Table of detected flights
-            df_preview = pd.DataFrame(st.session_state.flights)[["callsign", "icao24", "altitude", "velocity", "heading", "distance_km"]]
-            df_preview.columns = ["Callsign", "Mode-S Hex", "Altitude (m)", "Velocity (m/s)", "Heading (°)", "Distance (km)"]
+            df_preview = pd.DataFrame(flights)[["callsign", "icao24", "airline", "altitude", "velocity", "heading", "distance_km"]]
+            df_preview["altitude"] = df_preview["altitude"].apply(lambda a: f"{a * 3.28084:,.0f} ft")
+            df_preview["velocity"] = df_preview["velocity"].apply(lambda v: f"{v * 1.94384:.0f} kts")
+            df_preview["heading"] = df_preview["heading"].apply(lambda h: f"{h:.0f}°")
+            df_preview["distance_km"] = df_preview["distance_km"].apply(lambda d: f"{d:.1f} km")
+            df_preview.columns = ["Callsign", "Mode-S Hex", "Airline / Operator", "Altitude", "Ground Speed", "Heading", "Radial Distance"]
             st.dataframe(df_preview, use_container_width=True, hide_index=True)
         else:
-            st.info("Click 'Scan for Live Flights' above to detect aircraft in the selected radar horizon.")
+            st.info("👈 Open the sidebar on the left, select a radar hub, and click **Scan Horizon for Aircraft** to begin.")
             
         return
 
