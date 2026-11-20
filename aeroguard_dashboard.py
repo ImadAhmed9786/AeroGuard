@@ -4,7 +4,7 @@ import ast
 import math
 import random
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
 
@@ -926,8 +926,54 @@ def discover_flights(api, lat: float, lon: float, radius_km: float, hub_name: Op
 
 
 # ============================================================
-# COMPREHENSIVE FLIGHT ROUTE LOOKUP
+# COMPREHENSIVE FLIGHT ROUTE LOOKUP & SCHEDULE ESTIMATOR
 # ============================================================
+
+def compute_flight_schedule(
+    orig: Dict[str, Any],
+    dest: Dict[str, Any],
+    current_lat: Optional[float] = None,
+    current_lon: Optional[float] = None,
+    callsign: str = ""
+) -> Tuple[str, str]:
+    """
+    Computes realistic departure and arrival times based on route distance,
+    current aircraft position en route, and UTC clock.
+    """
+    orig_lat = float(orig.get("latitude") or 0.0)
+    orig_lon = float(orig.get("longitude") or 0.0)
+    dest_lat = float(dest.get("latitude") or 0.0)
+    dest_lon = float(dest.get("longitude") or 0.0)
+
+    # Great-circle distance between origin and destination
+    total_km = distance_km(orig_lat, orig_lon, dest_lat, dest_lon) if (orig_lat and dest_lat) else 800.0
+    total_km = max(150.0, total_km)
+
+    # Average commercial speed ~800 km/h + 25 min taxi/climb/approach
+    duration_min = max(35, int((total_km / 800.0) * 60 + 25))
+
+    # Calculate current progress along route if coordinates are provided
+    if current_lat is not None and current_lon is not None and orig_lat and dest_lat:
+        d_from_orig = distance_km(orig_lat, orig_lon, current_lat, current_lon)
+        d_to_dest = distance_km(current_lat, current_lon, dest_lat, dest_lon)
+        denom = max(1.0, d_from_orig + d_to_dest)
+        progress = max(0.12, min(0.88, d_from_orig / denom))
+    else:
+        clean = (callsign or "").strip().upper()
+        hash_val = sum(ord(c) for c in clean) if clean else 42
+        progress = 0.20 + ((hash_val % 55) / 100.0)
+
+    elapsed_min = int(progress * duration_min)
+    remaining_min = max(10, duration_min - elapsed_min)
+
+    now_utc = datetime.now(timezone.utc)
+    dep_dt = now_utc - timedelta(minutes=elapsed_min)
+    arr_dt = now_utc + timedelta(minutes=remaining_min)
+
+    dep_str = dep_dt.strftime("%H:%M UTC")
+    arr_str = arr_dt.strftime("%H:%M UTC")
+    return dep_str, arr_str
+
 
 @st.cache_data(ttl=120, show_spinner=False)
 def lookup_route(callsign: str, current_lat: Optional[float] = None, current_lon: Optional[float] = None, hub_name: Optional[str] = None) -> Optional[Dict[str, Any]]:
@@ -944,28 +990,35 @@ def lookup_route(callsign: str, current_lat: Optional[float] = None, current_lon
     matched_flight = next((sf for sf in hub_info.get("sample_flights", []) if sf["callsign"].upper() == clean), None)
     if matched_flight and matched_flight["dest_iata"] in hub_info["destinations"]:
         dest_info = hub_info["destinations"][matched_flight["dest_iata"]]
+        orig = {
+            "name": hub_info["name"],
+            "city": hub_info["city"],
+            "iata": hub_info["iata"],
+            "icao": hub_info["icao"],
+            "latitude": hub_info["lat"],
+            "longitude": hub_info["lon"],
+            "elevation": hub_info["elevation"]
+        }
+        dest = {
+            "name": dest_info["name"],
+            "city": dest_info["city"],
+            "iata": dest_info["iata"],
+            "icao": dest_info["icao"],
+            "latitude": dest_info["latitude"],
+            "longitude": dest_info["longitude"],
+            "elevation": dest_info["elevation"]
+        }
+        dep_str, arr_str = compute_flight_schedule(orig, dest, ref_lat, ref_lon, clean)
+        orig["dep_time"] = dep_str
+        dest["arr_time"] = arr_str
         return {
-            "origin": {
-                "name": hub_info["name"],
-                "city": hub_info["city"],
-                "iata": hub_info["iata"],
-                "icao": hub_info["icao"],
-                "latitude": hub_info["lat"],
-                "longitude": hub_info["lon"],
-                "elevation": hub_info["elevation"]
-            },
-            "destination": {
-                "name": dest_info["name"],
-                "city": dest_info["city"],
-                "iata": dest_info["iata"],
-                "icao": dest_info["icao"],
-                "latitude": dest_info["latitude"],
-                "longitude": dest_info["longitude"],
-                "elevation": dest_info["elevation"]
-            },
+            "origin": orig,
+            "destination": dest,
             "airline": matched_flight.get("airline", infer_airline(clean)),
             "callsign": clean,
-            "source": f"AeroGuard Airway Corridor ({hub_info['iata']} Sector)"
+            "source": f"AeroGuard Airway Corridor ({hub_info['iata']} Sector)",
+            "dep_time": dep_str,
+            "arr_time": arr_str,
         }
 
     # Also check if it's explicitly assigned in ANY other hub's sample flights:
@@ -973,28 +1026,35 @@ def lookup_route(callsign: str, current_lat: Optional[float] = None, current_lon
         mf = next((sf for sf in hdata.get("sample_flights", []) if sf["callsign"].upper() == clean), None)
         if mf and mf["dest_iata"] in hdata["destinations"]:
             dest_info = hdata["destinations"][mf["dest_iata"]]
+            orig = {
+                "name": hdata["name"],
+                "city": hdata["city"],
+                "iata": hdata["iata"],
+                "icao": hdata["icao"],
+                "latitude": hdata["lat"],
+                "longitude": hdata["lon"],
+                "elevation": hdata["elevation"]
+            }
+            dest = {
+                "name": dest_info["name"],
+                "city": dest_info["city"],
+                "iata": dest_info["iata"],
+                "icao": dest_info["icao"],
+                "latitude": dest_info["latitude"],
+                "longitude": dest_info["longitude"],
+                "elevation": dest_info["elevation"]
+            }
+            dep_str, arr_str = compute_flight_schedule(orig, dest, ref_lat, ref_lon, clean)
+            orig["dep_time"] = dep_str
+            dest["arr_time"] = arr_str
             return {
-                "origin": {
-                    "name": hdata["name"],
-                    "city": hdata["city"],
-                    "iata": hdata["iata"],
-                    "icao": hdata["icao"],
-                    "latitude": hdata["lat"],
-                    "longitude": hdata["lon"],
-                    "elevation": hdata["elevation"]
-                },
-                "destination": {
-                    "name": dest_info["name"],
-                    "city": dest_info["city"],
-                    "iata": dest_info["iata"],
-                    "icao": dest_info["icao"],
-                    "latitude": dest_info["latitude"],
-                    "longitude": dest_info["longitude"],
-                    "elevation": dest_info["elevation"]
-                },
+                "origin": orig,
+                "destination": dest,
                 "airline": mf.get("airline", infer_airline(clean)),
                 "callsign": clean,
-                "source": f"AeroGuard Airway Corridor ({hdata['iata']} Sector)"
+                "source": f"AeroGuard Airway Corridor ({hdata['iata']} Sector)",
+                "dep_time": dep_str,
+                "arr_time": arr_str,
             }
 
     # 2. PRIORITY 2: Live ADS-B Datalink (for real uncataloged transponders picked up by OpenSky)
@@ -1032,12 +1092,17 @@ def lookup_route(callsign: str, current_lat: Optional[float] = None, current_lon
                     "elevation": dest_data.get("elevation") or 0
                 }
                 airline_name = airline_data.get("name") if isinstance(airline_data, dict) else str(airline_data)
+                dep_str, arr_str = compute_flight_schedule(origin, destination, ref_lat, ref_lon, clean)
+                origin["dep_time"] = dep_str
+                destination["arr_time"] = arr_str
                 return {
                     "origin": origin,
                     "destination": destination,
                     "airline": airline_name or infer_airline(clean),
                     "callsign": clean,
-                    "source": "ADSBdb Air Traffic Datalink"
+                    "source": "ADSBdb Air Traffic Datalink",
+                    "dep_time": dep_str,
+                    "arr_time": arr_str,
                 }
     except Exception:
         pass
@@ -1045,28 +1110,35 @@ def lookup_route(callsign: str, current_lat: Optional[float] = None, current_lon
     # 3. PRIORITY 3: Geodetic Dynamic Hub Route Fallback
     first_dest_key = list(hub_info["destinations"].keys())[0]
     dest_info = hub_info["destinations"][first_dest_key]
+    orig = {
+        "name": hub_info["name"],
+        "city": hub_info["city"],
+        "iata": hub_info["iata"],
+        "icao": hub_info["icao"],
+        "latitude": hub_info["lat"],
+        "longitude": hub_info["lon"],
+        "elevation": hub_info["elevation"]
+    }
+    dest = {
+        "name": dest_info["name"],
+        "city": dest_info["city"],
+        "iata": dest_info["iata"],
+        "icao": dest_info["icao"],
+        "latitude": dest_info["latitude"],
+        "longitude": dest_info["longitude"],
+        "elevation": dest_info["elevation"]
+    }
+    dep_str, arr_str = compute_flight_schedule(orig, dest, ref_lat, ref_lon, clean)
+    orig["dep_time"] = dep_str
+    dest["arr_time"] = arr_str
     return {
-        "origin": {
-            "name": hub_info["name"],
-            "city": hub_info["city"],
-            "iata": hub_info["iata"],
-            "icao": hub_info["icao"],
-            "latitude": hub_info["lat"],
-            "longitude": hub_info["lon"],
-            "elevation": hub_info["elevation"]
-        },
-        "destination": {
-            "name": dest_info["name"],
-            "city": dest_info["city"],
-            "iata": dest_info["iata"],
-            "icao": dest_info["icao"],
-            "latitude": dest_info["latitude"],
-            "longitude": dest_info["longitude"],
-            "elevation": dest_info["elevation"]
-        },
+        "origin": orig,
+        "destination": dest,
         "airline": infer_airline(clean),
         "callsign": clean,
-        "source": f"AeroGuard Airway Corridor ({hub_info['iata']} Sector)"
+        "source": f"AeroGuard Airway Corridor ({hub_info['iata']} Sector)",
+        "dep_time": dep_str,
+        "arr_time": arr_str,
     }
 
 
@@ -3069,6 +3141,15 @@ def main():
     if route and "origin" in route and "destination" in route:
         orig = route["origin"]
         dest = route["destination"]
+        dep_time = orig.get("dep_time") or route.get("dep_time")
+        arr_time = dest.get("arr_time") or route.get("arr_time")
+        if not dep_time or not arr_time:
+            dep_time, arr_time = compute_flight_schedule(orig, dest, tgt_lat, tgt_lon, callsign)
+            orig["dep_time"] = dep_time
+            dest["arr_time"] = arr_time
+            route["dep_time"] = dep_time
+            route["arr_time"] = arr_time
+
         st.markdown(
             f"""
             <div class="foc-flight-strip">
@@ -3076,7 +3157,7 @@ def main():
                     <div class="foc-airport-node-sub">ORIGIN / DEPARTURE (DEP)</div>
                     <div class="foc-airport-iata">{orig.get('iata', 'DEP')}</div>
                     <div class="foc-airport-city">{orig['name']}</div>
-                    <div class="foc-airport-detail">{orig.get('city', '')} · Elev: {orig.get('elevation', 0)} ft</div>
+                    <div class="foc-airport-detail">{orig.get('city', '')} · Elev: {orig.get('elevation', 0)} ft · Dep: <span style="color: var(--foc-text-primary); font-weight: 600;">{dep_time}</span></div>
                 </div>
                 <div class="foc-route-vector">
                     <div class="foc-route-flight-num">{callsign}</div>
@@ -3090,7 +3171,7 @@ def main():
                     <div class="foc-airport-node-sub">DESTINATION / ARRIVAL (ARR)</div>
                     <div class="foc-airport-iata">{dest.get('iata', 'ARR')}</div>
                     <div class="foc-airport-city">{dest['name']}</div>
-                    <div class="foc-airport-detail">{dest.get('city', '')} · Elev: {dest.get('elevation', 0)} ft</div>
+                    <div class="foc-airport-detail">{dest.get('city', '')} · Elev: {dest.get('elevation', 0)} ft · Arr: <span style="color: var(--foc-text-primary); font-weight: 600;">{arr_time}</span></div>
                 </div>
             </div>
             """,
