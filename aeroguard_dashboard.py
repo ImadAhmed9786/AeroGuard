@@ -2039,19 +2039,22 @@ def main():
             border: 1px solid var(--foc-border);
             border-left: 5px solid var(--foc-gold);
             border-radius: 6px;
-            padding: 16px 24px;
+            padding: 14px 22px;
             margin-bottom: 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             gap: 16px;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+            overflow-x: auto;
         }
 
         .foc-airport-node {
             display: flex;
             flex-direction: column;
+            flex: 1 1 auto;
+            min-width: 0;
         }
 
         .foc-airport-node-sub {
@@ -2075,11 +2078,15 @@ def main():
             font-weight: 600;
             color: var(--foc-gold);
             margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .foc-airport-detail {
             font-size: 11px;
             color: var(--foc-text-dim);
+            white-space: nowrap;
         }
 
         .foc-route-vector {
@@ -2561,6 +2568,9 @@ def main():
             }
             .foc-airport-node {
                 text-align: left !important;
+            }
+            .foc-airport-city, .foc-airport-detail {
+                white-space: normal !important;
             }
             .foc-airport-iata {
                 font-size: 26px !important;
