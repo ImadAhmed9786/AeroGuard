@@ -26,6 +26,10 @@ AeroGuard bridges this critical aviation safety gap by continuously evaluating *
 ## 🚀 Key Architectural Pillars
 
 ### 1. Real-Time 1090MHz Mode-S ADS-B Surveillance
+* **Multi-Mode Airspace Targeting**: Interrogate global airspaces via:
+  * **📍 Preset Radar Hubs**: Rapid access to high-density hubs (Nagpur, Bengaluru, Mumbai, Delhi, Dubai, London, Singapore, New York, etc.).
+  * **🔍 Search Location / Airport**: Free-text search across 100+ global cities and IATA/ICAO airport codes (e.g., Goa, Tokyo, Paris, HYD, DXB) or comma-separated coordinates.
+  * **🌐 Custom Geodetic GPS Coordinates**: Direct numerical entry of Latitude ($-90^\circ$ to $+90^\circ$) and Longitude ($-180^\circ$ to $+180^\circ$) to lock radar surveillance over any point on Earth.
 * **Continuous Ingestion**: Live datalink connected to global transponder networks (OpenSky Network) polling active airframes at 10-second intervals.
 * **Inter-Frame Inertial Dead Reckoning**: When atmospheric noise or receiver gaps cause dropped frames, AeroGuard's inertial extrapolation engine uses the last known ground speed, true track vector, and vertical velocity to accurately dead-reckon airframe trajectory.
 * **Instant Frame-1 Cold-Start**: Automatically synthesizes backwards-continuous baseline kinematics upon target selection, delivering instant AI inferences and stability metrics without cold-start delay.
