@@ -2033,100 +2033,102 @@ def render_incident_dossier(
     vr_fpm = (latest.get("vertical_rate") or 0.0) * 196.85 if latest else 0.0
     hdg = latest.get("heading", 0.0) if latest else 0.0
 
-    st.markdown(
-        textwrap.dedent(f"""
-        <div class="foc-dossier-box">
-            <div class="foc-dossier-header">
-                <div>
-                    <div class="foc-dossier-crest">ICAO ANNEX 13 · DGCA SAFETY INVESTIGATION BUREAU</div>
-                    <div class="foc-dossier-title">PRELIMINARY FLIGHT ENVELOPE EXCURSION & DISTRESS DOSSIER</div>
-                    <div class="foc-dossier-doc-id">DOSSIER REF: <strong>{doc_id}</strong> · CLASSIFICATION: <strong>CONFIDENTIAL / SAFETY ACTION</strong></div>
-                </div>
-                <div class="foc-dossier-stamp">GADSS PRESERVED</div>
-            </div>
+    dossier_html = f"""
+<div class="foc-dossier-box">
+<div class="foc-dossier-header">
+<div>
+<div class="foc-dossier-crest">ICAO ANNEX 13 · DGCA SAFETY INVESTIGATION BUREAU</div>
+<div class="foc-dossier-title">PRELIMINARY FLIGHT ENVELOPE EXCURSION & DISTRESS DOSSIER</div>
+<div class="foc-dossier-doc-id">DOSSIER REF: <strong>{doc_id}</strong> · CLASSIFICATION: <strong>CONFIDENTIAL / SAFETY ACTION</strong></div>
+</div>
+<div class="foc-dossier-stamp">GADSS PRESERVED</div>
+</div>
 
-            <div class="foc-dossier-sec-head">1. AIRFRAME & REGISTRY SPECIFICATION</div>
-            <table class="foc-dossier-table">
-                <tr>
-                    <td class="label">Flight Callsign</td>
-                    <td class="val">{callsign}</td>
-                    <td class="label">Transponder (Mode-S)</td>
-                    <td class="val">{icao24.upper()}</td>
-                </tr>
-                <tr>
-                    <td class="label">Aircraft Model</td>
-                    <td class="val">{specs.get('full_name', 'Commercial Jet')} ({intel.get('icao_type', 'JET')})</td>
-                    <td class="label">Aircraft Registration</td>
-                    <td class="val">{intel.get('registration', 'UNKNOWN')} ({intel.get('country', 'International')})</td>
-                </tr>
-                <tr>
-                    <td class="label">Operating Airline</td>
-                    <td class="val">{airline}</td>
-                    <td class="label">Wake Category / MTOW</td>
-                    <td class="val">{specs.get('wake_category', 'Medium')} · {specs.get('mtow_kg', 0):,} kg</td>
-                </tr>
-            </table>
+<div class="foc-dossier-sec-head">1. AIRFRAME & REGISTRY SPECIFICATION</div>
+<table class="foc-dossier-table">
+<tr>
+<td class="label">Flight Callsign</td>
+<td class="val">{callsign}</td>
+<td class="label">Transponder (Mode-S)</td>
+<td class="val">{icao24.upper()}</td>
+</tr>
+<tr>
+<td class="label">Aircraft Model</td>
+<td class="val">{specs.get('full_name', 'Commercial Jet')} ({intel.get('icao_type', 'JET')})</td>
+<td class="label">Aircraft Registration</td>
+<td class="val">{intel.get('registration', 'UNKNOWN')} ({intel.get('country', 'International')})</td>
+</tr>
+<tr>
+<td class="label">Operating Airline</td>
+<td class="val">{airline}</td>
+<td class="label">Wake Category / MTOW</td>
+<td class="val">{specs.get('wake_category', 'Medium')} · {specs.get('mtow_kg', 0):,} kg</td>
+</tr>
+</table>
 
-            <div class="foc-dossier-sec-head">2. FLIGHT DISPATCH & SECTOR CORRIDOR</div>
-            <table class="foc-dossier-table">
-                <tr>
-                    <td class="label">Origin / Departure</td>
-                    <td class="val">{orig.get('name', 'Origin Airfield')} [{orig.get('iata', 'DEP')}] (Elev: {orig.get('elevation', 0)} ft)</td>
-                    <td class="label">Departure Schedule</td>
-                    <td class="val">{orig.get('dep_time', 'N/A')}</td>
-                </tr>
-                <tr>
-                    <td class="label">Destination / Arrival</td>
-                    <td class="val">{dest.get('name', 'Destination Airfield')} [{dest.get('iata', 'ARR')}] (Elev: {dest.get('elevation', 0)} ft)</td>
-                    <td class="label">Estimated Arrival</td>
-                    <td class="val">{dest.get('arr_time', 'N/A')}</td>
-                </tr>
-                <tr>
-                    <td class="label">Radar Control Sector</td>
-                    <td class="val">{st.session_state.get('location_source', 'Regional Airspace')}</td>
-                    <td class="label">Report Generated (UTC)</td>
-                    <td class="val">{now_utc}</td>
-                </tr>
-            </table>
+<div class="foc-dossier-sec-head">2. FLIGHT DISPATCH & SECTOR CORRIDOR</div>
+<table class="foc-dossier-table">
+<tr>
+<td class="label">Origin / Departure</td>
+<td class="val">{orig.get('name', 'Origin Airfield')} [{orig.get('iata', 'DEP')}] (Elev: {orig.get('elevation', 0)} ft)</td>
+<td class="label">Departure Schedule</td>
+<td class="val">{orig.get('dep_time', 'N/A')}</td>
+</tr>
+<tr>
+<td class="label">Destination / Arrival</td>
+<td class="val">{dest.get('name', 'Destination Airfield')} [{dest.get('iata', 'ARR')}] (Elev: {dest.get('elevation', 0)} ft)</td>
+<td class="label">Estimated Arrival</td>
+<td class="val">{dest.get('arr_time', 'N/A')}</td>
+</tr>
+<tr>
+<td class="label">Radar Control Sector</td>
+<td class="val">{st.session_state.get('location_source', 'Regional Airspace')}</td>
+<td class="label">Report Generated (UTC)</td>
+<td class="val">{now_utc}</td>
+</tr>
+</table>
 
-            <div class="foc-dossier-sec-head">3. TELEMETRY & KINEMATIC EXCURSION AT TRIGGER</div>
-            <div class="foc-dossier-telemetry-pill-grid">
-                <div class="foc-dossier-telemetry-pill">
-                    <div class="k">ALTITUDE (MSL)</div>
-                    <div class="v">{alt_ft:,.0f} ft</div>
-                </div>
-                <div class="foc-dossier-telemetry-pill">
-                    <div class="k">GROUND SPEED</div>
-                    <div class="v">{spd_kts:.0f} kts</div>
-                </div>
-                <div class="foc-dossier-telemetry-pill">
-                    <div class="k">VERTICAL SPEED</div>
-                    <div class="v">{vr_fpm:,.0f} fpm</div>
-                </div>
-                <div class="foc-dossier-telemetry-pill">
-                    <div class="k">BEARING / HEADING</div>
-                    <div class="v">{hdg:.0f}°</div>
-                </div>
-                <div class="foc-dossier-telemetry-pill">
-                    <div class="k">AI RISK SCORE</div>
-                    <div class="v" style="color: {'#EF4444' if (score or 0) >= 0.42 else '#00E676'};">{(score or 0):.1%}</div>
-                </div>
-            </div>
-            <div style="font-size: 12px; color: #E5E7EB; margin-bottom: 12px; line-height: 1.5;">
-                <strong>Primary Trigger Etiology:</strong> {emergency_issue or "Dynamic Flight Envelope Anomaly Threshold Exceeded"}<br>
-                <strong>System Assessment:</strong> Continuous temporal ML classification confirmed kinematic excursion exceeding nominal passenger transport flight envelope limits.
-            </div>
+<div class="foc-dossier-sec-head">3. TELEMETRY & KINEMATIC EXCURSION AT TRIGGER</div>
+<div class="foc-dossier-telemetry-pill-grid">
+<div class="foc-dossier-telemetry-pill">
+<div class="k">ALTITUDE (MSL)</div>
+<div class="v">{alt_ft:,.0f} ft</div>
+</div>
+<div class="foc-dossier-telemetry-pill">
+<div class="k">GROUND SPEED</div>
+<div class="v">{spd_kts:.0f} kts</div>
+</div>
+<div class="foc-dossier-telemetry-pill">
+<div class="k">VERTICAL SPEED</div>
+<div class="v">{vr_fpm:,.0f} fpm</div>
+</div>
+<div class="foc-dossier-telemetry-pill">
+<div class="k">BEARING / HEADING</div>
+<div class="v">{hdg:.0f}°</div>
+</div>
+<div class="foc-dossier-telemetry-pill">
+<div class="k">AI RISK SCORE</div>
+<div class="v" style="color: {'#EF4444' if (score or 0) >= 0.42 else '#00E676'};">{(score or 0):.1%}</div>
+</div>
+</div>
+<div style="font-size: 12px; color: #E5E7EB; margin-bottom: 12px; line-height: 1.5;">
+<strong>Primary Trigger Etiology:</strong> {emergency_issue or "Dynamic Flight Envelope Anomaly Threshold Exceeded"}<br>
+<strong>System Assessment:</strong> Continuous temporal ML classification confirmed kinematic excursion exceeding nominal passenger transport flight envelope limits.
+</div>
 
-            <div class="foc-dossier-sec-head">4. CRYPTOGRAPHIC DATA INTEGRITY & CHAIN OF CUSTODY</div>
-            <div class="foc-dossier-hash-block">
-                <div><strong>PRESERVED OBSERVATIONS:</strong> {len(rows)} telemetry frames ({len(rows) * 10 / 60:.1f} minutes of pre-incident black box DFDR data locked)</div>
-                <div style="margin-top: 4px;"><strong>SHA-256 TELEMETRY DIGEST:</strong> <code>{checksum}</code></div>
-                <div style="margin-top: 4px; font-size: 10px; color: #6B7280;">Compliant with ICAO Doc 10054 (Autonomous Distress Tracking) & Annex 13 Aircraft Accident Investigation protocol.</div>
-            </div>
-        </div>
-        """).strip(),
-        unsafe_allow_html=True
-    )
+<div class="foc-dossier-sec-head">4. CRYPTOGRAPHIC DATA INTEGRITY & CHAIN OF CUSTODY</div>
+<div class="foc-dossier-hash-block">
+<div><strong>PRESERVED OBSERVATIONS:</strong> {len(rows)} telemetry frames ({len(rows) * 10 / 60:.1f} minutes of pre-incident black box DFDR data locked)</div>
+<div style="margin-top: 4px;"><strong>SHA-256 TELEMETRY DIGEST:</strong> <code>{checksum}</code></div>
+<div style="margin-top: 4px; font-size: 10px; color: #6B7280;">Compliant with ICAO Doc 10054 (Autonomous Distress Tracking) & Annex 13 Aircraft Accident Investigation protocol.</div>
+</div>
+</div>
+"""
+    if hasattr(st, "html"):
+        st.html(dossier_html)
+    else:
+        cleaned_html = "\n".join(line.strip() for line in dossier_html.splitlines())
+        st.markdown(cleaned_html, unsafe_allow_html=True)
 
     col_d1, col_d2 = st.columns([1, 1])
     with col_d1:
@@ -2170,30 +2172,31 @@ Classification: CONFIDENTIAL FLIGHT SAFETY RECORD
         )
 
     with col_d2:
-        st.markdown(
-            """
-            <button onclick="window.print()" class="foc-dossier-print-btn" style="
-                width: 100%;
-                background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
-                color: #FFFFFF;
-                border: none;
-                border-radius: 4px;
-                padding: 10px 16px;
-                font-family: 'Space Grotesk', sans-serif;
-                font-weight: 700;
-                font-size: 14px;
-                cursor: pointer;
-                box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 8px;
-            ">
-                <span>🖨️ Print / Save Official PDF Dossier</span>
-            </button>
-            """,
-            unsafe_allow_html=True
-        )
+        print_btn_html = """
+<button onclick="window.print()" class="foc-dossier-print-btn" style="
+    width: 100%;
+    background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+    color: #FFFFFF;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 16px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+">
+    <span>🖨️ Print / Save Official PDF Dossier</span>
+</button>
+"""
+        if hasattr(st, "html"):
+            st.html(print_btn_html)
+        else:
+            st.markdown("\n".join(l.strip() for l in print_btn_html.splitlines()), unsafe_allow_html=True)
 
 
 # ============================================================
