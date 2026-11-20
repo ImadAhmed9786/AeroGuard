@@ -2093,7 +2093,10 @@ def main():
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             gap: 4px;
+            flex: 0 0 auto;
+            padding: 0 16px;
         }
 
         .foc-route-flight-num {
@@ -2111,7 +2114,7 @@ def main():
         }
 
         .foc-route-line {
-            width: 140px;
+            width: 100px;
             height: 2px;
             background: linear-gradient(90deg, var(--foc-blue) 0%, var(--foc-gold) 100%);
         }
@@ -2122,10 +2125,11 @@ def main():
         }
 
         .foc-route-airline {
-            font-size: 11px;
+            font-size: 10.5px;
             color: var(--foc-text-dim);
             font-family: 'Chivo Mono', monospace;
             letter-spacing: 0.5px;
+            white-space: nowrap;
         }
 
         .foc-transponder-block {
