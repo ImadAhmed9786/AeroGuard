@@ -1355,43 +1355,60 @@ def make_route_map(route: Optional[Dict[str, Any]], track: list, latest_target: 
                 )
             )
 
-        # Tactical Target Dual-Ring Blip
+        # Tactical Aircraft Symbol (Plane Emoji replaces the dot)
+        ac_callsign = ""
+        if latest_target and latest_target.get("callsign"):
+            ac_callsign = str(latest_target["callsign"]).strip()
+        elif route and route.get("callsign"):
+            ac_callsign = str(route["callsign"]).strip()
+        if not ac_callsign:
+            ac_callsign = "TARGET FIX"
+
+        # 1. Subtle Radar Target Halo
         layers.append(
             pdk.Layer(
                 "ScatterplotLayer",
-                data=[{"position": current, "name": "Live Aircraft Telemetry Position"}],
+                data=[{"position": current, "name": f"Aircraft {ac_callsign}"}],
                 get_position="position",
-                get_fill_color=[255, 36, 66, 180],  # Outer Ruby Strobe Ring
-                get_line_color=[255, 255, 255, 255],
+                get_fill_color=[0, 229, 255, 30],   # Soft Cyan Radar Pulse
+                get_line_color=[255, 215, 0, 180],  # Solar Gold Halo Outline
                 get_line_width=2,
                 stroked=True,
-                get_radius=12000,
+                get_radius=10000,
                 radius_min_pixels=14,
                 radius_max_pixels=24,
                 pickable=True,
             )
         )
-        layers.append(
-            pdk.Layer(
-                "ScatterplotLayer",
-                data=[{"position": current, "name": "Target Core Fix"}],
-                get_position="position",
-                get_fill_color=[255, 179, 0, 255],  # Inner Solar Gold Core
-                get_radius=6000,
-                radius_min_pixels=6,
-                radius_max_pixels=12,
-                pickable=True,
-            )
-        )
+
+        # 2. Aircraft Emoji at Present Location
         layers.append(
             pdk.Layer(
                 "TextLayer",
-                data=[{"position": current, "text": "TARGET FIX"}],
+                data=[{"position": current, "text": "✈"}],
                 get_position="position",
                 get_text="text",
-                get_color=[255, 255, 255, 255],
-                get_size=12,
-                get_pixel_offset=[0, 22],
+                get_color=[255, 215, 0, 255],  # Solar Gold Aircraft Symbol
+                get_size=26,
+                get_alignment_baseline="'center'",
+                get_text_anchor="'middle'",
+                get_pixel_offset=[0, 0],
+                pickable=True,
+            )
+        )
+
+        # 3. Aircraft Callsign Identifier Label
+        layers.append(
+            pdk.Layer(
+                "TextLayer",
+                data=[{"position": current, "text": ac_callsign}],
+                get_position="position",
+                get_text="text",
+                get_color=[255, 255, 255, 240],
+                get_size=11,
+                get_alignment_baseline="'top'",
+                get_text_anchor="'middle'",
+                get_pixel_offset=[0, 16],
                 pickable=True,
             )
         )
