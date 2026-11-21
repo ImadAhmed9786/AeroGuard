@@ -787,9 +787,11 @@ def get_closest_hub_key(lat: float, lon: float) -> str:
     return best_key
 
 
+LOGO_PATH = Path(__file__).parent / "Aeroguard Logo.png"
+
 st.set_page_config(
     page_title="AeroGuard Avionics | Flight Operations Center",
-    page_icon=None,
+    page_icon=str(LOGO_PATH) if LOGO_PATH.exists() else "✈️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -3336,11 +3338,25 @@ def main():
     status_led = "foc-led-active" if is_active else "foc-led-standby"
     status_text = "MONITORING ACTIVE" if is_active else "STANDBY · WAITING FOR TARGET"
     
+    logo_b64 = ""
+    if LOGO_PATH.exists():
+        try:
+            with open(LOGO_PATH, "rb") as f_logo:
+                logo_b64 = base64.b64encode(f_logo.read()).decode("utf-8")
+        except Exception:
+            logo_b64 = ""
+
+    logo_markup = (
+        f'<img src="data:image/png;base64,{logo_b64}" style="height: 54px; width: 54px; object-fit: contain; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.15);" alt="AeroGuard Emblem" />'
+        if logo_b64
+        else '<div class="foc-insignia">AEROGUARD FOC</div>'
+    )
+    
     st.markdown(
         f"""
         <div class="foc-masthead">
             <div class="foc-brand-group">
-                <div class="foc-insignia">AEROGUARD FOC</div>
+                {logo_markup}
                 <div class="foc-title-block">
                     <h1>Airspace Telemetry & Flight Operations Command</h1>
                     <p>Continuous 1090MHz ADS-B Ingestion · Dynamic Envelope Quality Assurance · ICAO GADSS DFDR</p>
@@ -3367,6 +3383,12 @@ def main():
     # SIDEBAR: RADAR HUB & SELECTION CONTROLS
     # ---------------------------------------------------------
     with st.sidebar:
+        if LOGO_PATH.exists():
+            st.image(str(LOGO_PATH), use_container_width=True)
+            st.markdown(
+                '<div style="margin-top: -6px; margin-bottom: 14px; text-align: center; font-size: 0.72rem; color: #94A3B8; letter-spacing: 1.5px; font-weight: 600;">AUTONOMOUS AVIONICS DEFENSE</div>',
+                unsafe_allow_html=True,
+            )
         st.subheader("Radar Horizon & Operations")
         
         target_mode = st.radio(
