@@ -9,6 +9,7 @@ import random
 import struct
 import textwrap
 import time
+import urllib.parse
 import wave
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
@@ -1343,17 +1344,6 @@ def make_route_map(route: Optional[Dict[str, Any]], track: list, latest_target: 
                     width_min_pixels=2,
                 )
             )
-            layers.append(
-                pdk.Layer(
-                    "ScatterplotLayer",
-                    data=[{"position": [tip_lon, tip_lat], "color": [255, 215, 0, 255]}],
-                    get_position="position",
-                    get_fill_color="color",
-                    get_radius=2200,
-                    radius_min_pixels=3,
-                    radius_max_pixels=6,
-                )
-            )
 
         # Tactical Aircraft Symbol (Plane Emoji replaces the dot)
         ac_callsign = ""
@@ -1364,51 +1354,55 @@ def make_route_map(route: Optional[Dict[str, Any]], track: list, latest_target: 
         if not ac_callsign:
             ac_callsign = "TARGET FIX"
 
-        # 1. Subtle Radar Target Halo
+        # Crisp vector SVG airplane icon (Solar Gold tactical silhouette with heading orientation)
+        airplane_svg = """<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <path d="M32 3 C29.5 3 27.5 6.5 27.5 12 L27.5 25 L4 37 L4 43 L27.5 36 L27.5 49 L20 54 L20 59 L32 56 L44 59 L44 54 L36.5 49 L36.5 36 L60 43 L60 37 L36.5 25 L36.5 12 C36.5 6.5 34.5 3 32 3 Z" fill="#FFD700" stroke="#0F172A" stroke-width="1.6" stroke-linejoin="round"/>
+  <rect x="18" y="32" width="3" height="7" rx="1.5" fill="#F59E0B" stroke="#0F172A" stroke-width="0.8"/>
+  <rect x="43" y="32" width="3" height="7" rx="1.5" fill="#F59E0B" stroke="#0F172A" stroke-width="0.8"/>
+  <path d="M30 11 Q32 9 34 11 L34 14 Q32 15 30 14 Z" fill="#0284C7"/>
+</svg>"""
+        airplane_icon_url = f"data:image/svg+xml;charset=utf-8,{urllib.parse.quote(airplane_svg.strip())}"
+        plane_heading = float(hdg_val) if hdg_val is not None else 0.0
+
+        # 1. Rotatable Tactical Aircraft Icon (Replaces the dot)
         layers.append(
             pdk.Layer(
-                "ScatterplotLayer",
-                data=[{"position": current, "name": f"Aircraft {ac_callsign}"}],
+                "IconLayer",
+                data=[{
+                    "position": current,
+                    "icon_data": {
+                        "url": airplane_icon_url,
+                        "width": 64,
+                        "height": 64,
+                        "anchorX": 32,
+                        "anchorY": 32,
+                    },
+                    "angle": plane_heading,
+                    "name": f"Aircraft {ac_callsign}",
+                }],
+                get_icon="icon_data",
                 get_position="position",
-                get_fill_color=[0, 229, 255, 30],   # Soft Cyan Radar Pulse
-                get_line_color=[255, 215, 0, 180],  # Solar Gold Halo Outline
-                get_line_width=2,
-                stroked=True,
-                get_radius=10000,
-                radius_min_pixels=14,
-                radius_max_pixels=24,
+                get_size=38,
+                get_angle="angle",
                 pickable=True,
             )
         )
 
-        # 2. Aircraft Emoji at Present Location
+        # 2. Callsign Label with Tactical Plane Emoji (Unicode auto-character set)
+        label_text = f"✈ {ac_callsign}" if not ac_callsign.startswith("✈") else ac_callsign
         layers.append(
             pdk.Layer(
                 "TextLayer",
-                data=[{"position": current, "text": "✈"}],
-                get_position="position",
-                get_text="text",
-                get_color=[255, 215, 0, 255],  # Solar Gold Aircraft Symbol
-                get_size=26,
-                get_alignment_baseline="'center'",
-                get_text_anchor="'middle'",
-                get_pixel_offset=[0, 0],
-                pickable=True,
-            )
-        )
-
-        # 3. Aircraft Callsign Identifier Label
-        layers.append(
-            pdk.Layer(
-                "TextLayer",
-                data=[{"position": current, "text": ac_callsign}],
+                data=[{"position": current, "text": label_text}],
                 get_position="position",
                 get_text="text",
                 get_color=[255, 255, 255, 240],
-                get_size=11,
+                get_size=12,
                 get_alignment_baseline="'top'",
                 get_text_anchor="'middle'",
-                get_pixel_offset=[0, 16],
+                get_pixel_offset=[0, 22],
+                character_set="auto",
+                font_family="'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif",
                 pickable=True,
             )
         )
