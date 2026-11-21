@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AeroGuard Avionics — Comprehensive Model & Dashboard Presentation</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Segoe+UI:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-dark: #070B12;
+    --card-bg: #0E1626;
+    --border-color: #1A2840;
+    --accent-green: #00E676;
+    --accent-cyan: #00E5FF;
+    --accent-blue: #00B0FF;
+    --accent-amber: #FFD600;
+    --accent-red: #FF1744;
+    --text-primary: #F0F4F8;
+    --text-secondary: #94A3B8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    background: #0B111E;
+    border-bottom: 1px solid var(--border-color);
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--accent-green);
+  }
+  .brand span { color: var(--text-secondary); font-size: 0.85rem; font-weight: 400; }
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .btn {
+    background: #142035;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn:hover {
+    background: #1E3050;
+    border-color: var(--accent-cyan);
+    color: var(--accent-cyan);
+  }
+  .slide-counter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--accent-amber);
+    padding: 0 10px;
+  }
+  main {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+  .slide {
+    position: absolute;
+    inset: 0;
+    padding: 24px 36px;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(40px);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+  .slide.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+  }
+  .slide-header {
+    margin-bottom: 18px;
+  }
+  .slide-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--accent-green);
+    letter-spacing: 0.5px;
+  }
+  .slide-subtitle {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    font-style: italic;
+  }
+  .slide-body {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 24px;
+    align-items: stretch;
+    min-height: 0;
+  }
+  .snip-container {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    position: relative;
+    overflow: hidden;
+  }
+  .snip-container img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 4px;
+    border: 1px solid #1E2D45;
+  }
+  .snip-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(11, 17, 30, 0.85);
+    border: 1px solid var(--accent-cyan);
+    color: var(--accent-cyan);
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .content-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow-y: auto;
+  }
+  .bullets-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .bullets-list li {
+    font-size: 0.92rem;
+    line-height: 1.45;
+    position: relative;
+    padding-left: 20px;
+    color: var(--text-primary);
+  }
+  .bullets-list li::before {
+    content: "▪";
+    position: absolute;
+    left: 0;
+    color: var(--accent-cyan);
+    font-size: 1.1rem;
+    line-height: 1.3;
+  }
+  .bullets-list strong {
+    color: var(--accent-cyan);
+  }
+  .viva-box {
+    margin-top: 16px;
+    background: rgba(255, 214, 0, 0.08);
+    border-left: 3px solid var(--accent-amber);
+    padding: 10px 14px;
+    border-radius: 0 6px 6px 0;
+  }
+  .viva-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent-amber);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .viva-text {
+    font-size: 0.86rem;
+    font-style: italic;
+    color: #E2E8F0;
+    line-height: 1.4;
+  }
+  footer {
+    background: #0B111E;
+    border-top: 1px solid var(--border-color);
+    padding: 8px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+  .footer-nav {
+    display: flex;
+    gap: 12px;
+  }
+  kbd {
+    background: #1A2840;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid #2B3D5D;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent-cyan);
+  }
+  @media print {
+    body { overflow: visible; height: auto; background: #000; }
+    header, footer, .controls { display: none !important; }
+    .slide { position: relative; opacity: 1 !important; transform: none !important; page-break-after: always; height: 100vh; padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    ✈ AEROGUARD
+    <span>| Flight Operations Center Model Presentation</span>
+  </div>
+  <div class="controls">
+    <button class="btn" onclick="prevSlide()">◀ Previous</button>
+    <div class="slide-counter" id="slideCounter">1 / 10</div>
+    <button class="btn" onclick="nextSlide()">Next ▶</button>
+    <button class="btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    <button class="btn" onclick="window.print()">🖨️ PDF</button>
+  </div>
+</header>
+
+<main id="slideContainer">
+
+  <section class="slide active" id="slide-1">
+    <div class="slide-header">
+      <h2 class="slide-title">1. AeroGuard Avionics</h2>
+      <p class="slide-subtitle">Real-Time AI Flight Safety Intelligence & Anomaly Detection</p>
+    </div>
+    <div class="slide-body">
+      <div class="snip-container">
+        <div class="snip-badge">ACTUAL MODEL SNIP</div>
+        <img src="presentation_assets/snip_02_tab1_overview.png" alt="AeroGuard Avionics Model Snip">
+      </div>
+      <div class="content-card">
+        <ul class="bullets-list">
+          <li><strong>Aviation Challenge:</strong>  Traditional Air Traffic Control (ATC) radar displays raw positional points; controllers only know an aircraft is in trouble after an emergency develops.</li>
+<li><strong>AeroGuard Solution:</strong>  An intelligent avionics safety platform that ingests real-time Mode-S ADS-B telemetry, continuously assesses aerodynamic stability, and predicts distress before critical failure.</li>
+<li><strong>Core Pipeline:</strong>  1 Hz live ADS-B ingestion -> 17 kinematic differential features -> Random Forest ML classifier -> Real-time XAI bounds -> ICAO Annex 13 black box filing.</li>
+<li><strong>Production Architecture:</strong>  Streamlit frontend, PyDeck 3D radar map, Vega-Lite kinematics traces, and cryptographic SHA-256 evidence sealing.</li>
+        </ul>
+        <div class="viva-box">
+          <div class="viva-label">🎤 Viva / Interview Defense Script</div>
+          <div class="viva-text">"AeroGuard transforms standard radar monitoring from passive observation into proactive, real-time safety intervention using machine learning."</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="slide " id="slide-2">
+    <div class="slide-header">
+      <h2 class="slide-title">2. Electronic Flight Progress Strip (EFS)</h2>
+      <p class="slide-subtitle">Live Dynamic Route Tracking & Zulu Schedule Computation</p>
+    </div>
+    <div class="slide-body">
+      <div class="snip-container">
+        <div class="snip-badge">ACTUAL MODEL SNIP</div>
+        <img src="presentation_assets/snip_01_route_strip.png" alt="Electronic Flight Progress Strip (EFS) Model Snip">
+      </div>
+      <div class="content-card">
+        <ul class="bullets-list">
+          <li><strong>Origin & Destination Aerodromes:</strong>  Sardar Vallabhbhai Patel (AMD, Elev: 189 ft) to Chhatrapati Shivaji Maharaj (BOM, Elev: 39 ft).</li>
+<li><strong>Barometric Altimeter Physics:</strong>  Airport elevations dictate the QNH barometric pressure sub-scale calibration required for safe approach and touchdown.</li>
+<li><strong>Zulu Time Standard:</strong>  International aviation strictly operates on UTC (Zulu time) to prevent time desynchronization across cross-border flight corridors (Dep: 09:15 UTC, Arr: 10:20 UTC).</li>
+<li><strong>Dynamic Airway Vector:</strong>  Flight AIC019 (Air India) position progress is tracked continuously along the great-circle airway corridor using the spherical Haversine formula.</li>
+        </ul>
+        <div class="viva-box">
+          <div class="viva-label">🎤 Viva / Interview Defense Script</div>
+          <div class="viva-text">"Electronic flight strips in modern Eurocat/TopSky towers replace paper strips with dynamic telemetry, showing arrival ETAs and elevation benchmarks in real time."</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="slide " id="slide-3">
+    <div class="slide-header">
+      <h2 class="slide-title">3. Primary Flight Instruments HUD</h2>
+      <p class="slide-subtitle">5-Card Avionics Telemetry Deck & Physical Significance</p>
+    </div>
+    <div class="slide-body">
+      <div class="snip-container">
+        <div class="snip-badge">ACTUAL MODEL SNIP</div>
+        <img src="presentation_assets/snip_06_hud_metrics.png" alt="Primary Flight Instruments HUD Model Snip">
+      </div>
+      <div class="content-card">
+        <ul class="bullets-list">
+          <li><strong>Altitude (MSL) - 31,998 ft:</strong>  Flying at Flight Level 320 (FL320) calibrated to the 1013.25 hPa standard atmospheric pressure plane.</li>
+<li><strong>Ground Speed - 439 kts:</strong>  High subsonic cruise speed (~813 km/h, Mach 0.78), tracking ground velocity over the Earth's surface via Mode-S Doppler radar.</li>
+<li><strong>Vertical Speed - -157 fpm:</strong>  Indicates aerodynamic cruise equilibrium (Lift = Weight); within normal atmospheric ±200 fpm autopilot oscillation.</li>
+<li><strong>Magnetic Heading - 250°:</strong>  West-Southwest assigned track vector guiding the aircraft from Ahmedabad into the Mumbai FIR approach corridor.</li>
+<li><strong>Squawk Code - 3321:</strong>  Mode-3A discrete radar identifier assigned by Mumbai ATC; automatic trip-wire triggers instant red alert on emergency 7700 squawks.</li>
+        </ul>
+        <div class="viva-box">
+          <div class="viva-label">🎤 Viva / Interview Defense Script</div>
+          <div class="viva-text">"These five HUD metrics represent the aircraft's instantaneous 6-DOF state vector. Our feature engineering pipeline transforms these raw inputs into high-order derivatives."</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="slide " id="slide-4">
+    <div class="slide-header">
+      <h2 class="slide-title">4. Flight Envelope Stability Index</h2>
+      <p class="slide-subtitle">Kinematic Health Formulation & 0.42 Calibrated Boundary</p>
+    </div>
+    <div class="slide-body">
+      <div class="snip-container">
+        <div class="snip-badge">ACTUAL MODEL SNIP</div>
+        <img src="presentation_assets/snip_07_stability_xai.png" alt="Flight Envelope Stability Index Model Snip">
+      </div>
+      <div class="content-card">
+        <ul class="bullets-list">
+          <li><strong>Stability Index (56.7%):</strong>  Formulated as 100 * (1 - P(Distress)) * (1 - JitterPenalty). The score accounts for sensor noise and mild atmospheric chop at FL320.</li>
+<li><strong>Why 0.42 Decision Threshold:</strong>  In standard ML, 0.50 is the cutoff. In aerospace safety, missing a crash (False Negative) is unacceptable.</li>
+<li><strong>Cost-Sensitive Optimization:</strong>  Lowering the anomaly threshold to 0.42 maximizes Distress Recall (71.5%) while keeping false alerts bounded.</li>
+<li><strong>Excursion Counter:</strong>  Real-time counter tracking continuous out-of-envelope frames, preventing transient sensor glitches from sounding false alarms.</li>
+        </ul>
+        <div class="viva-box">
+          <div class="viva-label">🎤 Viva / Interview Defense Script</div>
+          <div class="viva-text">"We intentionally rejected the naive 0.50 decision boundary. In safety-critical aviation, missing an upset is catastrophic, so we tuned the boundary to 0.42 for high recall."</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="slide " id="slide-5">
+    <div class="slide-header">
+      <h2 class="slide-title">5. Explainable AI (XAI) Attributions</h2>
+      <p class="slide-subtitle">Four SHAP-Inspired Real-Time Kinematic Envelope Cards</p>
+    </div>
+    <div class="slide-body">
+      <div class="snip-container">
+        <div class="snip-badge">ACTUAL MODEL SNIP</div>
+        <img src="presentation_assets/snip_07_stability_xai.png" alt="Explainable AI (XAI) Attributions Model Snip">
+      </div>
+      <div class="content-card">
+        <ul class="bullets-list">
+          <li><strong>Vertical Dynamics (dz/dt):</strong>  -157 fpm (Nominal: ±500 fpm). Detects aerodynamic stalls, mountain wave downdrafts, and uncommanded dives.</li>
+<li><strong>Kinetic Energy (dv/dt):</strong>  0.12 kt/s (Nominal: ±0.5 kt/s). Measures longitudinal aircraft acceleration to identify engine thrust asymmetry or flameout.</li>
+<li><strong>Lateral Yaw Track (σ_θ):</strong>  1.4° (Nominal: <2.5°). Rolling heading standard deviation; high jitter exposes Dutch Roll instability or severe windshear.</li>
+<li><strong>Barometric Envelope (Δz):</strong>  142 ft (Nominal: <300 ft). Strictly adheres to ICAO RVSM (Reduced Vertical Separation Minimum) 300 ft corridor bounds.</li>
+        </ul>
+        <div class="viva-box">
+          <div class="viva-label">🎤 Viva / Interview Defense Script</div>
+          <div class="viva-text">"Instead of presenting a black-box probability, AeroGuard decomposes risk into 4 physical dimensions so air traffic controllers instantly understand why an alert fired."</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="slide " id="slide-6">
+    <div class="slide-header">
+      <h2 class="slide-title">6. 3D Air Traffic Radar Display</h2>
+      <p class="slide-subtitle">Corridor Waypoint Tracking, Range Rings & Heading Vector</p>
+    </div>
+    <div class="slide-body">
+      <div class="snip-container">
+        <div class="snip-badge">ACTUAL MODEL SNIP</div>
+        <img src="presentation_assets/snip_05_radar_view.png" alt="3D Air Traffic Radar Display Model Snip">
+      </div>
+      <div class="content-card">
+        <ul class="bullets-list">
+          <li><strong>Cyan Airway Corridor:</strong>  Displays the active ICAO high-altitude RNAV airway corridor between departure and arrival terminal control areas.</li>
+<li><strong>Concentric Range Rings (25 km & 50 km):</strong>  Ground-referenced distance circles centered on the aircraft fix, providing instant horizontal separation visual scale.</li>
+<li><strong>Golden Velocity Leader:</strong>  3-minute forward dead-reckoning vector computed from ground speed and magnetic track: Lat_{t+3} = Lat_0 + (v*t*cosθ)/R.</li>
+<li><strong>Situational Awareness:</strong>  If the golden vector drifts off the cyan airway centerline, the radar controller spots navigation drift minutes before conflict.</li>
+        </ul>
+        <div class="viva-box">
+          <div class="viva-label">🎤 Viva / Interview Defense Script</div>
+          <div class="viva-text">"The 3-minute heading vector leader projects the future trajectory of the aircraft, enabling controllers to resolve airspace separation conflicts well before they manifest."</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="slide " id="slide-7">
+    <div class="slide-header">
+      <h2 class="slide-title">7. Dynamic Kinematics Trajectory Curves</h2>
+      <p class="slide-subtitle">Real-Time 120-Second Vega-Lite Sliding Window Profiles</p>
+    </div>
+    <div class="slide-body">
+      <div class="snip-container">
+        <div class="snip-badge">ACTUAL MODEL SNIP</div>
+        <img src="presentation_assets/snip_08_vega_graphs.png" alt="Dynamic Kinematics Trajectory Curves Model Snip">
+      </div>
+      <div class="content-card">
+        <ul class="bullets-list">
+          <li><strong>Temporal Altitude Profile:</strong>  Displays a rolling 120-second history of barometric altitude, clearly distinguishing between level cruise, climb, and rapid descents.</li>
+<li><strong>Kinetic Ground Speed Curve:</strong>  Monitors auto-throttle velocity hold; sudden steep decelerations highlight high-altitude aerodynamic stall risks.</li>
+<li><strong>Vertical Rate Kinematics:</strong>  Visualizes instantaneous vertical velocity derivatives; high-frequency oscillations reflect atmospheric turbulence damping by the autopilot.</li>
+<li><strong>Time-Series Memory:</strong>  Enables ground operations to visualize the precise physical evolution leading up to any stability index excursion.</li>
+        </ul>
+        <div class="viva-box">
+          <div class="viva-label">🎤 Viva / Interview Defense Script</div>
+          <div class="viva-text">"Static points hide trends. Our Vega-Lite sliding curves provide the temporal derivatives necessary to detect dynamic instability such as phugoid oscillations."</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="slide " id="slide-8">
+    <div class="slide-header">
+      <h2 class="slide-title">8. Machine Learning Model Architecture</h2>
+      <p class="slide-subtitle">Random Forest Ensemble & 17 Kinematic Feature Pipeline</p>
+    </div>
+    <div class="slide-body">
+      <div class="snip-container">
+        <div class="snip-badge">ACTUAL MODEL SNIP</div>
+        <img src="presentation_assets/snip_02_tab1_overview.png" alt="Machine Learning Model Architecture Model Snip">
+      </div>
+      <div class="content-card">
+        <ul class="bullets-list">
+          <li><strong>Model Selection:</strong>  Random Forest with 100 bagged decision trees, chosen over deep networks for sub-2ms inference speed and deterministic explainability.</li>
+<li><strong>GroupShuffleSplit Validation:</strong>  Split grouped strictly by individual Flight ID to prevent temporal data leakage between consecutive frames of the same flight.</li>
+<li><strong>17 Engineered Features:</strong>  Positional (alt, speed, track), 3-second first derivatives (Δz, Δv, Δθ), 5-point rolling statistics (means & variances), and kinetic energy proxies (0.5*v^2, gz + 0.5*v^2).</li>
+<li><strong>Model Benchmark:</strong>  77.4% overall test accuracy, 71.5% distress event recall, with zero latency lag during live 1 Hz ADS-B data streaming.</li>
+        </ul>
+        <div class="viva-box">
+          <div class="viva-label">🎤 Viva / Interview Defense Script</div>
+          <div class="viva-text">"We engineered physics-based features like specific mechanical energy and acceleration derivatives rather than feeding raw coordinates, giving the model true aerodynamic sensitivity."</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="slide " id="slide-9">
+    <div class="slide-header">
+      <h2 class="slide-title">9. Aircraft Model & Fleet Intelligence</h2>
+      <p class="slide-subtitle">OEM Specifications & Aerodynamic Constraints (Tab 2)</p>
+    </div>
+    <div class="slide-body">
+      <div class="snip-container">
+        <div class="snip-badge">ACTUAL MODEL SNIP</div>
+        <img src="presentation_assets/snip_03_tab2_fleet_intel.png" alt="Aircraft Model & Fleet Intelligence Model Snip">
+      </div>
+      <div class="content-card">
+        <ul class="bullets-list">
+          <li><strong>Airframe Identification:</strong>  Airbus A320-200 / A320ceo, manufactured by Airbus S.A.S., ICAO Type Code A320.</li>
+<li><strong>Wake Turbulence Category (MEDIUM):</strong>  Under ICAO Doc 8643, enforces mandatory 3-5 nautical mile separation behind the aircraft to protect trailing flights from wingtip vortices.</li>
+<li><strong>Maximum Takeoff Weight (MTOW - 78,000 kg):</strong>  Structural mass limit governing aerodynamic lift generation (L = MTOW * g = 0.5 * ρ * v^2 * S * C_L).</li>
+<li><strong>Operational Ceiling (FL390 - 39,000 ft):</strong>  Cruising at FL320 leaves a 7,000 ft buffer below the aerodynamic coffin corner.</li>
+<li><strong>Powerplant:</strong>  Dual CFM International CFM56-5B4 high-bypass turbofans generating 27,000 lbf of thrust each.</li>
+        </ul>
+        <div class="viva-box">
+          <div class="viva-label">🎤 Viva / Interview Defense Script</div>
+          <div class="viva-text">"Tab 2 links live transponder hex codes to certified OEM specs, allowing AeroGuard to tailor envelope boundaries to the exact airframe being monitored."</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="slide " id="slide-10">
+    <div class="slide-header">
+      <h2 class="slide-title">10. DFDR Black Box & Incident Dossier</h2>
+      <p class="slide-subtitle">ICAO Annex 13 Air Safety Reporting & SHA-256 Integrity (Tab 3)</p>
+    </div>
+    <div class="slide-body">
+      <div class="snip-container">
+        <div class="snip-badge">ACTUAL MODEL SNIP</div>
+        <img src="presentation_assets/snip_04_tab3_incident_dossier.png" alt="DFDR Black Box & Incident Dossier Model Snip">
+      </div>
+      <div class="content-card">
+        <ul class="bullets-list">
+          <li><strong>ICAO Annex 13 Mandate:</strong>  Formatted to international standards for preliminary accident/incident submission to bodies like DGCA, AAIB, and NTSB.</li>
+<li><strong>45-Minute In-Memory DFDR Buffer:</strong>  Rolling black-box cache adhering to ICAO GADSS (Doc 10054) autonomous distress tracking mandates.</li>
+<li><strong>Cryptographic Evidence Integrity:</strong>  SHA-256 hash digests generated over raw telemetry frames to guarantee tamper-proof legal chain of custody.</li>
+<li><strong>Multi-Format Export:</strong>  Includes instant Markdown incident file download and print-ready vectorized PDF generation for air safety boards.</li>
+        </ul>
+        <div class="viva-box">
+          <div class="viva-label">🎤 Viva / Interview Defense Script</div>
+          <div class="viva-text">"AeroGuard doesn't just sound an alarm; it automatically compiles an ICAO Annex 13 compliant incident dossier sealed with SHA-256 cryptography for immediate dispatch."</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>AeroGuard • Autonomous Flight Envelope Safety & Anomaly Detection • ICAO GADSS / Annex 13</div>
+  <div class="footer-nav">
+    Navigate with <kbd>◀</kbd> <kbd>▶</kbd> or <kbd>Space</kbd> • Fullscreen <kbd>F</kbd> • Print/PDF <kbd>Ctrl+P</kbd>
+  </div>
+</footer>
+
+<script>
+  let currentSlide = 1;
+  const totalSlides = 10;
+
+  function showSlide(n) {
+    if (n < 1) n = 1;
+    if (n > totalSlides) n = totalSlides;
+    currentSlide = n;
+    
+    document.querySelectorAll('.slide').forEach((el, idx) => {
+      el.classList.toggle('active', idx === currentSlide - 1);
+    });
+    
+    document.getElementById('slideCounter').textContent = currentSlide + ' / ' + totalSlides;
+  }
+
+  function nextSlide() {
+    if (currentSlide < totalSlides) showSlide(currentSlide + 1);
+  }
+
+  function prevSlide() {
+    if (currentSlide > 1) showSlide(currentSlide - 1);
+  }
+
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+    } else {
+      if (document.exitFullscreen) document.exitFullscreen();
+    }
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+      nextSlide();
+    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      prevSlide();
+    } else if (e.key.toLowerCase() === 'f') {
+      toggleFullscreen();
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -7,7 +7,10 @@ and authentic photography for commercial and general aviation aircraft.
 from __future__ import annotations
 import os
 from pathlib import Path
-import requests
+try:
+    import requests
+except ImportError:
+    requests = None
 from typing import Dict, Any, Optional
 
 # Root directory for verified local aircraft photos

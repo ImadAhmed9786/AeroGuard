@@ -25,6 +25,18 @@ from opensky_api import OpenSkyApi, TokenManager
 # Import rich aircraft fleet intelligence module
 import aircraft_intel
 
+# Import Hybrid Avionics Safety Supervisor (EKF, Dual-Horizon CUSUM, OEM Guardrails)
+try:
+    from aeroguard_hybrid_supervisor import (
+        KinematicKalmanFilter,
+        DualHorizonCUSUMTracker,
+        OEMDeterministicSupervisor,
+    )
+except ImportError:
+    KinematicKalmanFilter = None
+    DualHorizonCUSUMTracker = None
+    OEMDeterministicSupervisor = None
+
 try:
     from streamlit_geolocation import streamlit_geolocation
 except ImportError:
@@ -1496,6 +1508,18 @@ def initialize():
         "play_chime": False,
         "last_audio_chime_ts": 0.0,
         "show_incident_dossier": False,
+        "kalman_filter": KinematicKalmanFilter() if KinematicKalmanFilter is not None else None,
+        "cusum_tracker": DualHorizonCUSUMTracker(window_size=180) if DualHorizonCUSUMTracker is not None else None,
+        "oem_supervisor": OEMDeterministicSupervisor() if OEMDeterministicSupervisor is not None else None,
+        "supervisor_diagnostics": {
+            "ekf_status": "NOMINAL (1 Hz Locked)",
+            "dropout_bridged": False,
+            "cusum_drift": False,
+            "cusum_reason": "",
+            "oem_override": False,
+            "oem_reason": "AIRBUS A320 ENVELOPE SECURED",
+            "active_ceiling_ft": 39800.0,
+        },
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -1589,6 +1613,14 @@ def select_flight(flight):
     st.session_state.emergency_issue = None
     st.session_state.sim_active = None
     st.session_state.kinematic_diagnostics = None
+    if st.session_state.get("kalman_filter"):
+        st.session_state.kalman_filter.reset()
+    if st.session_state.get("cusum_tracker"):
+        st.session_state.cusum_tracker.reset()
+    if st.session_state.get("kalman_filter"):
+        st.session_state.kalman_filter.reset()
+    if st.session_state.get("cusum_tracker"):
+        st.session_state.cusum_tracker.reset()
     st.session_state.route = lookup_route(
         flight["callsign"],
         lat,
@@ -1615,6 +1647,10 @@ def stop_monitoring():
     st.session_state.route_checked = False
     st.session_state.sim_active = None
     st.session_state.kinematic_diagnostics = None
+    if st.session_state.get("kalman_filter"):
+        st.session_state.kalman_filter.reset()
+    if st.session_state.get("cusum_tracker"):
+        st.session_state.cusum_tracker.reset()
 
 
 def inject_simulation(sim_type: str):
@@ -1891,6 +1927,63 @@ def poll_flight(api, model, threshold, create_features):
             post_file, mode="a", header=not post_file.exists(), index=False
         )
 
+    # -------------------------------------------------------------
+    # HYBRID AVIONICS SAFETY SUPERVISOR PROCESSING
+    # -------------------------------------------------------------
+    kf = st.session_state.get("kalman_filter")
+    if kf is None and KinematicKalmanFilter is not None:
+        kf = KinematicKalmanFilter()
+        st.session_state.kalman_filter = kf
+
+    cusum = st.session_state.get("cusum_tracker")
+    if cusum is None and DualHorizonCUSUMTracker is not None:
+        cusum = DualHorizonCUSUMTracker(window_size=180)
+        st.session_state.cusum_tracker = cusum
+
+    oem = st.session_state.get("oem_supervisor")
+    if oem is None and OEMDeterministicSupervisor is not None:
+        oem = OEMDeterministicSupervisor()
+        st.session_state.oem_supervisor = oem
+
+    alt_ft = float(record.get("baro_altitude", 10000.0)) * 3.28084
+    vr_fpm = float(record.get("vertical_rate", 0.0)) * 196.85
+    gs_kts = float(record.get("velocity", 230.0)) * 1.94384
+    t_unix = float(record.get("timestamp_unix", now))
+
+    ekf_res = {"filtered_alt": alt_ft, "filtered_vr": vr_fpm, "filtered_gs": gs_kts, "dropout_bridged": False}
+    if kf is not None:
+        ekf_res = kf.update(alt_ft, vr_fpm, gs_kts, t_unix)
+        record["baro_altitude"] = ekf_res["filtered_alt"] / 3.28084
+        record["geo_altitude"] = record["baro_altitude"]
+        record["vertical_rate"] = ekf_res["filtered_vr"] / 196.85
+        record["velocity"] = ekf_res["filtered_gs"] / 1.94384
+
+    cusum_res = {"drift_detected": False, "drift_reason": "", "cusum_score": 0.0}
+    if cusum is not None:
+        cusum_res = cusum.update(ekf_res["filtered_alt"], ekf_res["filtered_gs"], ekf_res["filtered_vr"], t_unix)
+
+    oem_res = {"hard_override": False, "primary_violation": "ENVELOPE NOMINAL", "active_ceiling_ft": 39800.0}
+    if oem is not None:
+        specs_data = st.session_state.get("fleet_intel", {}).get("specs", {})
+        oem_res = oem.evaluate_envelope(
+            alt_ft=ekf_res["filtered_alt"],
+            vr_fpm=ekf_res["filtered_vr"],
+            gs_kts=ekf_res["filtered_gs"],
+            squawk_str=str(record.get("squawk", "3321")),
+            aircraft_specs=specs_data,
+        )
+
+    st.session_state.supervisor_diagnostics = {
+        "ekf_status": "DROPOUT BRIDGED (Noise Damped)" if ekf_res["dropout_bridged"] else "NOMINAL (1 Hz Locked)",
+        "dropout_bridged": ekf_res["dropout_bridged"],
+        "cusum_drift": cusum_res["drift_detected"],
+        "cusum_reason": cusum_res["drift_reason"],
+        "cusum_score": cusum_res["cusum_score"],
+        "oem_override": oem_res["hard_override"],
+        "oem_reason": oem_res["primary_violation"],
+        "active_ceiling_ft": oem_res["active_ceiling_ft"],
+    }
+
     st.session_state.ai_history.append(record)
 
     # Telemetry Envelope Evaluation (10-observation sliding window)
@@ -1912,18 +2005,31 @@ def poll_flight(api, model, threshold, create_features):
             idx = classes.index(1) if 1 in classes else 0
             score = float(probabilities[idx])
 
+            # Apply Deterministic OEM & CUSUM Safety Overrides
+            if oem_res["hard_override"]:
+                score = max(score, 0.98)
+                st.session_state.ai_status = f"OEM HARD OVERRIDE: {oem_res['primary_violation']}"
+            elif cusum_res["drift_detected"]:
+                score = max(score, 0.72)
+                st.session_state.ai_status = f"CUSUM DRIFT OVERRIDE: {cusum_res['drift_reason']}"
+            else:
+                is_excursion = score >= threshold
+                st.session_state.ai_status = "CRITICAL ENVELOPE EXCURSION" if is_excursion else "FLIGHT ENVELOPE NOMINAL"
+
             st.session_state.last_score = score
             st.session_state.kinematic_diagnostics = compute_kinematic_diagnostics(features)
             is_excursion = score >= threshold
-            st.session_state.ai_status = "CRITICAL ENVELOPE EXCURSION" if is_excursion else "FLIGHT ENVELOPE NOMINAL"
 
             if is_excursion:
                 st.session_state.anomaly_count += 1
             else:
                 st.session_state.anomaly_count = 0
 
-            if st.session_state.anomaly_count >= ANOMALY_REQUIRED and not st.session_state.emergency:
-                fire_emergency("Automated Telemetry Envelope Deviation Exceeded")
+            if (oem_res["hard_override"] or st.session_state.anomaly_count >= ANOMALY_REQUIRED) and not st.session_state.emergency:
+                fire_emergency(
+                    oem_res["primary_violation"] if oem_res["hard_override"]
+                    else (cusum_res["drift_reason"] if cusum_res["drift_detected"] else "Automated Telemetry Envelope Deviation Exceeded")
+                )
         except Exception as eval_exc:
             st.session_state.ai_status = f"Envelope check active: {eval_exc}"
     else:
@@ -3777,6 +3883,43 @@ def main():
                 st.metric("STABILITY INDEX", stat_val, stat_delta)
             with s3:
                 st.metric("ENVELOPE EXCURSIONS", excursions_val, excursions_sub)
+
+            # Hybrid Avionics Safety Supervisor Status Deck
+            sup_diag = st.session_state.get("supervisor_diagnostics", {})
+            if sup_diag:
+                ekf_txt = "⚠️ DROPOUT BRIDGED (Noise Damped)" if sup_diag.get("dropout_bridged") else "DAMPED (1 Hz Locked)"
+                ekf_clr = "#FFD600" if sup_diag.get("dropout_bridged") else "#00E676"
+                cusum_txt = f"⚠️ INSIDIOUS DRIFT ({sup_diag.get('cusum_score', 0)}σ)" if sup_diag.get("cusum_drift") else "NOMINAL (180s Horizon)"
+                cusum_clr = "#FF1744" if sup_diag.get("cusum_drift") else "#00E5FF"
+                oem_override = sup_diag.get("oem_override", False)
+                oem_txt = sup_diag.get("oem_reason", "AIRBUS A320 ENVELOPE SECURED")
+                oem_clr = "#FF1744" if oem_override else "#00E5FF"
+                oem_badge_bg = "rgba(255, 23, 68, 0.15)" if oem_override else "rgba(0, 230, 118, 0.12)"
+                oem_badge_border = "#FF1744" if oem_override else "#00E676"
+                oem_badge_txt = "CRITICAL HARD OVERRIDE" if oem_override else "AI + PHYSICS SUPERVISOR ACTIVE"
+
+                st.markdown(
+                    f"""
+                    <div style="background: #0B1220; border: 1px solid #1A2840; border-radius: 8px; padding: 10px 16px; margin: 12px 0 16px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="color: #00E676; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.5px;">🛡️ HYBRID AVIONICS SUPERVISOR:</span>
+                            <span style="background: {oem_badge_bg}; color: {oem_badge_border}; border: 1px solid {oem_badge_border}; padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 700;">{oem_badge_txt}</span>
+                        </div>
+                        <div style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap; font-size: 0.78rem;">
+                            <div>
+                                <span style="color: #64748B;">EKF State:</span> <strong style="color: {ekf_clr};">{ekf_txt}</strong>
+                            </div>
+                            <div>
+                                <span style="color: #64748B;">CUSUM Horizon:</span> <strong style="color: {cusum_clr};">{cusum_txt}</strong>
+                            </div>
+                            <div>
+                                <span style="color: #64748B;">OEM Guardrail:</span> <strong style="color: {oem_clr};">{oem_txt}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
             # Explainable AI (XAI) Kinematic Envelope Attribution
             diag = st.session_state.get("kinematic_diagnostics")
