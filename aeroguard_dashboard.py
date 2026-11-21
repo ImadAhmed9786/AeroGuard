@@ -31,11 +31,15 @@ try:
         KinematicKalmanFilter,
         DualHorizonCUSUMTracker,
         OEMDeterministicSupervisor,
+        classify_emergency_subsystem,
+        generate_icao_executive_summary,
     )
 except ImportError:
     KinematicKalmanFilter = None
     DualHorizonCUSUMTracker = None
     OEMDeterministicSupervisor = None
+    classify_emergency_subsystem = None
+    generate_icao_executive_summary = None
 
 try:
     from streamlit_geolocation import streamlit_geolocation
@@ -1520,6 +1524,9 @@ def initialize():
             "oem_reason": "AIRBUS A320 ENVELOPE SECURED",
             "active_ceiling_ft": 39800.0,
         },
+        "subsystem_diagnosis": None,
+        "replay_mode": False,
+        "replay_index": 0,
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -1984,6 +1991,28 @@ def poll_flight(api, model, threshold, create_features):
         "active_ceiling_ft": oem_res["active_ceiling_ft"],
     }
 
+    # Subsystem Emergency Diagnosis (Feature #5)
+    hdg_std_val = 0.0
+    try:
+        if st.session_state.get("kinematic_diagnostics"):
+            lat_str = str(st.session_state["kinematic_diagnostics"].get("lateral", {}).get("value", "0"))
+            hdg_std_val = float(lat_str.replace("°", "").replace("deg", "").strip() or 0.0)
+    except Exception:
+        hdg_std_val = 0.0
+
+    diag_obj = {"code": "NOMINAL", "category": "NORMAL FLIGHT ENVELOPE", "color": "#00E676", "severity": "NORMAL"}
+    if classify_emergency_subsystem is not None:
+        diag_obj = classify_emergency_subsystem(
+            alt_ft=ekf_res["filtered_alt"],
+            vr_fpm=ekf_res["filtered_vr"],
+            gs_kts=ekf_res["filtered_gs"],
+            hdg_std=hdg_std_val,
+            squawk_str=str(record.get("squawk", "3321")),
+            oem_override=oem_res["hard_override"],
+            cusum_drift=cusum_res["drift_detected"],
+        )
+    st.session_state.subsystem_diagnosis = diag_obj
+
     st.session_state.ai_history.append(record)
 
     # Telemetry Envelope Evaluation (10-observation sliding window)
@@ -2139,6 +2168,22 @@ def render_incident_dossier(
     vr_fpm = (latest.get("vertical_rate") or 0.0) * 196.85 if latest else 0.0
     hdg = latest.get("heading", 0.0) if latest else 0.0
 
+    sub_diag = st.session_state.get("subsystem_diagnosis") or {"code": "NOMINAL", "category": "NORMAL FLIGHT ENVELOPE", "color": "#00E676", "severity": "NORMAL", "probable_cause": "Standard airline passenger transport operations.", "action": "Maintain assigned clearances."}
+    exec_summary = ""
+    if generate_icao_executive_summary is not None:
+        exec_summary = generate_icao_executive_summary(
+            callsign=callsign,
+            airframe=specs.get("full_name", "Commercial Jet"),
+            origin=orig.get("iata", "DEP"),
+            destination=dest.get("iata", "ARR"),
+            alt_ft=alt_ft,
+            vr_fpm=vr_fpm,
+            gs_kts=spd_kts,
+            squawk=str(latest.get("squawk", "3321") if latest else "3321"),
+            diagnosis=sub_diag,
+            checksum=checksum,
+        )
+
     dossier_html = f"""
 <div class="foc-dossier-box">
 <div class="foc-dossier-header">
@@ -2222,7 +2267,13 @@ def render_incident_dossier(
 <strong>System Assessment:</strong> Continuous temporal ML classification confirmed kinematic excursion exceeding nominal passenger transport flight envelope limits.
 </div>
 
-<div class="foc-dossier-sec-head">4. CRYPTOGRAPHIC DATA INTEGRITY & CHAIN OF CUSTODY</div>
+<div class="foc-dossier-sec-head">4. FORENSIC EXECUTIVE SUMMARY & SUBSYSTEM DIAGNOSIS</div>
+<div style="background: rgba(15, 23, 42, 0.6); border: 1px solid #1E293B; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
+<div style="margin-bottom: 6px;"><strong>DIAGNOSED SUBSYSTEM ANOMALY:</strong> <span style="color: {sub_diag.get('color', '#00E676')}; font-weight: 700;">{sub_diag.get('category', 'NORMAL FLIGHT ENVELOPE')}</span> ({sub_diag.get('severity', 'NORMAL')})</div>
+<div style="font-size: 12px; color: #CBD5E1; line-height: 1.6; font-style: italic;">"{exec_summary}"</div>
+</div>
+
+<div class="foc-dossier-sec-head">5. CRYPTOGRAPHIC DATA INTEGRITY & CHAIN OF CUSTODY</div>
 <div class="foc-dossier-hash-block">
 <div><strong>PRESERVED OBSERVATIONS:</strong> {len(rows)} telemetry frames ({len(rows) * 10 / 60:.1f} minutes of pre-incident black box DFDR data locked)</div>
 <div style="margin-top: 4px;"><strong>SHA-256 TELEMETRY DIGEST:</strong> <code>{checksum}</code></div>
@@ -2263,8 +2314,12 @@ Classification: CONFIDENTIAL FLIGHT SAFETY RECORD
 - Heading: {hdg:.0f}°
 - AI Anomaly Score: {(score or 0):.1%}
 - Trigger Cause: {emergency_issue}
+- Subsystem Diagnosis: {sub_diag.get('category')} ({sub_diag.get('severity')})
 
-## 4. Evidence Integrity & Chain of Custody
+## 4. Forensic Executive Summary
+{exec_summary}
+
+## 5. Evidence Integrity & Chain of Custody
 - Frames Preserved: {len(rows)} (Rolling DFDR Window)
 - SHA-256 Telemetry Checksum: {checksum}
 - Standard: ICAO GADSS Doc 10054 / Annex 13
@@ -3831,9 +3886,34 @@ def main():
 
             rows = st.session_state.recording
 
+            # -------------------------------------------------------------
+            # DFDR 45-MINUTE FLIGHT HISTORY REPLAY CONTROLLER (Feature #31)
+            # -------------------------------------------------------------
+            latest = rows[-1] if rows else {}
+            if len(rows) > 3:
+                c_rep1, c_rep2 = st.columns([1, 4])
+                with c_rep1:
+                    is_replay = st.toggle("⏪ DFDR Replay", value=st.session_state.get("replay_mode", False), key="toggle_dfdr_replay", help="Scrub historical telemetry across the 45-minute buffer")
+                    st.session_state.replay_mode = is_replay
+                with c_rep2:
+                    if is_replay:
+                        max_i = len(rows) - 1
+                        scrub_idx = st.slider(
+                            f"Scrub Flight History ({len(rows)} frames buffered · {(rows[-1]['timestamp_unix'] - rows[0]['timestamp_unix'])/60:.1f} min window)",
+                            min_value=0,
+                            max_value=max_i,
+                            value=st.session_state.get("replay_index", max_i),
+                            key="slider_dfdr_replay_idx",
+                            help="Drag back in time to inspect historical flight parameters and cockpit gauges",
+                        )
+                        st.session_state.replay_index = scrub_idx
+                        latest = rows[scrub_idx]
+                        st.caption(f"⏱️ REPLAY FRAME [{scrub_idx + 1}/{len(rows)}]: Recorded at {latest.get('timestamp', 'UTC')}")
+                    else:
+                        latest = rows[-1]
+
             # Telemetry Metrics Grid (Avionics PFD / MFD Style)
-            if rows:
-                latest = rows[-1]
+            if rows and latest:
                 alt_m = latest['baro_altitude'] if pd.notna(latest['baro_altitude']) else 10000.0
                 alt_ft = alt_m * 3.28084
                 spd_mps = latest['velocity'] if pd.notna(latest['velocity']) else 230.0
@@ -3915,6 +3995,28 @@ def main():
                             <div>
                                 <span style="color: #64748B;">OEM Guardrail:</span> <strong style="color: {oem_clr};">{oem_txt}</strong>
                             </div>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+            # Subsystem Emergency Diagnosis Banner (Feature #5)
+            sub_diag = st.session_state.get("subsystem_diagnosis")
+            if sub_diag and sub_diag.get("code") != "NOMINAL":
+                st.markdown(
+                    f"""
+                    <div style="background: rgba(255, 23, 68, 0.12); border: 1px solid {sub_diag.get('color', '#FF1744')}; border-radius: 8px; padding: 10px 16px; margin: 8px 0 14px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.2rem;">⚠️</span>
+                            <div>
+                                <strong style="color: {sub_diag.get('color', '#FF1744')}; font-size: 0.88rem; letter-spacing: 0.5px;">DIAGNOSED SUBSYSTEM: {sub_diag.get('category')}</strong>
+                                <div style="color: #CBD5E1; font-size: 0.78rem;">{sub_diag.get('probable_cause')}</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="color: #94A3B8; font-size: 0.75rem;">Action: {sub_diag.get('action')}</span>
+                            <span style="background: {sub_diag.get('color', '#FF1744')}; color: #000; font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 4px;">{sub_diag.get('severity')}</span>
                         </div>
                     </div>
                     """,

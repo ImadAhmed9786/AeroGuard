@@ -2,7 +2,13 @@ import os
 import sys
 
 sys.path.append(r"d:\Models\AeroGuard")
-from aeroguard_hybrid_supervisor import KinematicKalmanFilter, DualHorizonCUSUMTracker, OEMDeterministicSupervisor
+from aeroguard_hybrid_supervisor import (
+    KinematicKalmanFilter,
+    DualHorizonCUSUMTracker,
+    OEMDeterministicSupervisor,
+    classify_emergency_subsystem,
+    generate_icao_executive_summary,
+)
 
 def run_tests():
     print("=================================================================")
@@ -78,6 +84,20 @@ def run_tests():
     # Test Squawk 7700 tripwire
     s_sq = sup.evaluate_envelope(32000.0, -150.0, 440.0, "7700", a320_specs)
     assert_test("OEM Transponder 7700 Hard Override", s_sq["hard_override"] == True and "7700" in s_sq["primary_violation"], s_sq.get("primary_violation"))
+
+    # 4. EMERGENCY SUBSYSTEM CLASSIFICATION TESTS (Feature #5)
+    d_dive = classify_emergency_subsystem(25000.0, -5500.0, 410.0, 1.2, "7700")
+    assert_test("Subsystem Diagnosis: Depressurization Dive", d_dive["code"] == "DEPRESS_DIVE", f"Diagnosed: {d_dive['category']}")
+
+    d_roll = classify_emergency_subsystem(32000.0, -150.0, 430.0, 6.2, "3321")
+    assert_test("Subsystem Diagnosis: Dutch Roll Yaw Flutter", d_roll["code"] == "DUTCH_ROLL", f"Diagnosed: {d_roll['category']}")
+
+    d_nom = classify_emergency_subsystem(32000.0, -150.0, 440.0, 1.1, "3321")
+    assert_test("Subsystem Diagnosis: Nominal Operations", d_nom["code"] == "NOMINAL", f"Diagnosed: {d_nom['category']}")
+
+    # 5. ICAO EXECUTIVE NARRATIVE GENERATION (Feature #33)
+    nar = generate_icao_executive_summary("AIC019", "Airbus A320", "AMD", "BOM", 32000.0, -150.0, 440.0, "3321", d_nom, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+    assert_test("ICAO Executive Narrative Generation", "AIC019" in nar and "SHA-256" in nar, f"Length: {len(nar)} chars")
 
     print("\n" + "="*65)
     print(f"   HYBRID SUPERVISOR TEST RESULTS: {passed} / {total} PASS ({(passed/total)*100:.1f}%)")

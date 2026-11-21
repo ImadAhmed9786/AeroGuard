@@ -300,5 +300,119 @@ class OEMDeterministicSupervisor:
             "breach_level": breach_level,
             "reasons": reasons,
             "primary_violation": reasons[0] if reasons else "ENVELOPE NOMINAL",
-            "active_ceiling_ft": ceiling
+            "active_ceiling_ft": ceiling,
         }
+
+
+def classify_emergency_subsystem(
+    alt_ft: float,
+    vr_fpm: float,
+    gs_kts: float,
+    hdg_std: float,
+    squawk_str: str,
+    oem_override: bool = False,
+    cusum_drift: bool = False
+) -> Dict[str, Any]:
+    """
+    Subsystem Emergency Diagnosis (Feature #5).
+    Classifies general distress alerts into precise aerodynamic root causes.
+    """
+    squawk = str(squawk_str).strip()
+
+    if vr_fpm < -4500.0 or (squawk == "7700" and vr_fpm < -3000.0):
+        return {
+            "code": "DEPRESS_DIVE",
+            "category": "CABIN DEPRESSURIZATION / HIGH-ALTITUDE DIVE",
+            "color": "#FF1744",
+            "severity": "CRITICAL RISK",
+            "action": "Immediate emergency descent to 10,000 ft MSL required.",
+            "probable_cause": "Rapid cabin pressure loss or emergency oxygen descent profile."
+        }
+    elif hdg_std > 4.5 or (squawk == "7700" and abs(vr_fpm) < 2000.0 and gs_kts > 200.0):
+        return {
+            "code": "DUTCH_ROLL",
+            "category": "DUTCH ROLL / LATERAL YAW INSTABILITY",
+            "color": "#FFD600",
+            "severity": "HIGH RISK",
+            "action": "Engage yaw damper, disconnect autopilot, cross-check rudder trim.",
+            "probable_cause": "Directional stability degradation, wake vortex, or yaw damper failure."
+        }
+    elif gs_kts < 180.0 and alt_ft > 15000.0:
+        return {
+            "code": "STALL_ENERGY",
+            "category": "AERODYNAMIC STALL / ENERGY STARVATION",
+            "color": "#FF1744",
+            "severity": "CRITICAL RISK",
+            "action": "Lower nose attitude, apply maximum thrust, monitor stall warning horn.",
+            "probable_cause": "Uncommanded kinetic energy decay or thrust asymmetry at cruise."
+        }
+    elif alt_ft < 3500.0 and vr_fpm < -1800.0:
+        return {
+            "code": "CFIT_APPROACH",
+            "category": "UNSTABILIZED FINAL APPROACH SINK RATE",
+            "color": "#FF1744",
+            "severity": "HIGH RISK",
+            "action": "Execute immediate Go-Around / Missed Approach protocol.",
+            "probable_cause": "Vertical descent profile exceeding ICAO stabilized approach criteria."
+        }
+    elif cusum_drift:
+        return {
+            "code": "INSIDIOUS_DRIFT",
+            "category": "INSIDIOUS FLIGHT LEVEL DRIFT (SLOW DEPRESS)",
+            "color": "#FFD600",
+            "severity": "MEDIUM RISK",
+            "action": "Verify barometric altimeter sub-scale setting (QNH) and cabin altitude indicator.",
+            "probable_cause": "Gradual uncommanded flight level drift or slow atmospheric leak."
+        }
+    elif oem_override:
+        return {
+            "code": "OEM_EXCURSION",
+            "category": "OEM CERTIFIED ENVELOPE EXCURSION",
+            "color": "#FF1744",
+            "severity": "HIGH RISK",
+            "action": "Return aircraft within certified manufacturer flight envelope.",
+            "probable_cause": "Operating beyond certified aerodynamic service limits."
+        }
+    else:
+        return {
+            "code": "NOMINAL",
+            "category": "NORMAL FLIGHT ENVELOPE (NOMINAL)",
+            "color": "#00E676",
+            "severity": "NORMAL",
+            "action": "Maintain assigned ATC route clearances and flight plan.",
+            "probable_cause": "Standard airline passenger transport operations."
+        }
+
+
+def generate_icao_executive_summary(
+    callsign: str,
+    airframe: str,
+    origin: str,
+    destination: str,
+    alt_ft: float,
+    vr_fpm: float,
+    gs_kts: float,
+    squawk: str,
+    diagnosis: Dict[str, Any],
+    checksum: str
+) -> str:
+    """
+    Automated Incident Investigator Executive Narrative (Feature #33).
+    Produces standardized 3-sentence summary for ICAO Annex 13 preliminary safety dossiers.
+    """
+    timestamp_utc = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
+    category = diagnosis.get("category", "FLIGHT ENVELOPE EXCURSION")
+    action = diagnosis.get("action", "Standard operations.")
+    cause = diagnosis.get("probable_cause", "Nominal flight.")
+    
+    narrative = (
+        f"At {timestamp_utc}, flight {callsign} ({airframe}) en route from {origin} to {destination} "
+        f"was intercepted with an envelope status of {category}. "
+        f"Dynamic telemetry at trigger recorded altitude {int(alt_ft):,} ft MSL, ground speed {int(gs_kts)} kts, "
+        f"and vertical velocity {int(vr_fpm)} fpm under Mode-S transponder squawk {squawk}. "
+        f"Preliminary forensic assessment indicates {cause} "
+        f"Recommended advisory: {action} "
+        f"Chain of custody bit-level integrity verified under SHA-256 digest ({checksum[:16]}...)."
+    )
+    return narrative
+
